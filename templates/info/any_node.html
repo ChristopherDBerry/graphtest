@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+    <style type="text/css">
+      html, body, #container {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+</head>
+
+<body>
+  <script src="https://cdn.anychart.com/releases/v8/js/anychart-base.min.js"></script>
+  <script src="https://cdn.anychart.com/releases/v8/js/anychart-graph.min.js"></script>
+  <script src="https://cdn.anychart.com/releases/v8/js/anychart-data-adapter.min.js"></script>
+  <script src="https://cdn.anychart.com/releases/v8/js/anychart-ui.min.js"></script>
+  <script src="https://cdn.anychart.com/releases/v8/js/anychart-exports.min.js"></script>
+<div id="container"></div>
+
+<script>
+
+anychart.onDocumentReady(function () {
+  anychart.data.loadJsonFile(
+    '/json/any/nodes',
+    function (data) {
+      var chart = anychart.graph(data);
+
+      // disable chart tooltips
+      //chart.tooltip(false);
+
+      // enable chart nodes labels
+      //chart.nodes().labels().enabled(true);
+
+      // set node labels text formatter
+      chart
+        .nodes()
+        .labels()
+        .format(function () {
+          var text = this.getData('group');
+          if (text !== 'break') {
+            return this.getData('group');
+          }
+          return '';
+        });
+
+      // set server group nodes settings
+      var screenshotGroup = chart.group('screenshot');
+      screenshotGroup.shape('square');
+      screenshotGroup.height(100);
+      screenshotGroup.width(100);
+      screenshotGroup.stroke('none');
+      screenshotGroup.fill({
+        // XXX get from node.screenshot
+        src:
+          'https://dxtfs.com/4c4f085febfe2696a43540502b9b03f66edf6d7d79e14ad6886743b73a011bb8(image,png)',
+        mode: 'fit'
+      });
+
+      // enable edge arrows and set arrow size
+      var arrows = chart.edges().arrows();
+      arrows.enabled(true);
+      arrows.size(8);
+
+      // set container id for the chart
+      chart.container('container');
+      chart.layout().iterationCount(0); //edge graph
+      // initiate chart drawing
+      chart.draw();
+    }
+  );
+});
+
+</script>
+
+</body>
+</html>
+

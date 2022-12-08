@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<!-- http://bl.ocks.org/nitaku/7483341 -->
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>ID-based force layout</title>
+        <link type="text/css" href="index.css" rel="stylesheet"/>
+        <script src="http://d3js.org/d3.v3.min.js"></script>
+        <script src="index.js"></script>
+    </head>
+    <body onload="main()">
+
+<style type="text/css">
+.node > circle {
+  stroke-width: 2px;
+  stroke: gray;
+  fill: #dddddd;
+}
+
+.node > text {
+  pointer-events: none;
+  font-family: sans-serif;
+  text-anchor: middle;
+}
+
+.link {
+  stroke-width: 2px;
+  stroke: lightgrey;
+}
+</style>
+
+<script>
+(function() {
+
+  window.main = function() {
+    var drag, force, graph, height, l, links, n, nodes, vis, width, _i, _j, _len, _len2, _ref, _ref2;
+    width = 960;
+    height = 500;
+    /* create the SVG
+    */
+    vis = d3.select('body').append('svg').attr('width', width).attr('height', height);
+    /* prepare nodes and links selections
+    */
+    nodes = vis.selectAll('.node');
+    links = vis.selectAll('.link');
+    /* initialize the force layout
+    */
+    force = d3.layout.force().size([width, height]).charge(-400).linkDistance(40).on('tick', (function() {
+      /* update nodes and links
+      */      nodes.attr('transform', function(d) {
+        return "translate(" + d.x + "," + d.y + ")";
+      });
+      return links.attr('x1', function(d) {
+        return d.source.x;
+      }).attr('y1', function(d) {
+        return d.source.y;
+      }).attr('x2', function(d) {
+        return d.target.x;
+      }).attr('y2', function(d) {
+        return d.target.y;
+      });
+    }));
+    /* define a drag behavior to drag nodes
+    */
+    /* dragged nodes become fixed
+    */
+    drag = force.drag().on('dragstart', function(d) {
+      return d.fixed = true;
+    });
+    /* create some fake data
+    */
+    graph = {
+
+"nodes": [{"id": "http://letextelibre.fr/ijeunesse/153/", "label": "page"}, {"id": "http://www.google.com/jsapi?key=ABQIAAAAkB7OzfQM4X9doW4zTrsnUxQLM2eb59MWLtypjUYZDMDCvfzWcRTdbMYB8Lmjzf4lJVUleuhDMv5w3g", "label": "page"}, {"id": "http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js", "label": "page"}, {"id": "https://www.gstatic.com/charts/loader.js?key=ABQIAAAAkB7OzfQM4X9doW4zTrsnUxQLM2eb59MWLtypjUYZDMDCvfzWcRTdbMYB8Lmjzf4lJVUleuhDMv5w3g", "label": "page"}, {"id": "http://letextelibre.fr/media/js/jquery.tablesorter.min.js", "label": "page"}, {"id": "http://letextelibre.fr/media/css/main.css", "label": "page"}, {"id": "http://letextelibre.fr/media/js/ba-linkify.min.js", "label": "page"}, {"id": "http://www.google-analytics.com/ga.js", "label": "page"}, {"id": "https://www.google-analytics.com/ga.js", "label": "page"}, {"id": "http://www.google-analytics.com/r/__utm.gif?utmwv=5.7.2&utms=1&utmn=995374424&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=800x600&utmvp=800x600&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=848437717&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365730287&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=635812088&utmredir=1&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~", "label": "page"}, {"id": "http://letextelibre.fr/media/ul/livres/planetarium_s35G7nd.jpg", "label": "page"}, {"id": "https://www.google-analytics.com/r/__utm.gif?utmwv=5.7.2&utms=1&utmn=995374424&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=800x600&utmvp=800x600&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=848437717&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365730287&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=635812088&utmredir=1&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~", "label": "page"}, {"id": "http://letextelibre.fr/media/img/headeralt3.jpg", "label": "page"}, {"id": "http://letextelibre.fr/histoire", "label": "page"}, {"id": "http://letextelibre.fr/accueil", "label": "page"}, {"id": "http://letextelibre.fr/evenements", "label": "page"}, {"id": "http://letextelibre.fr/textes", "label": "page"}, {"id": "http://letextelibre.fr/jeunesse", "label": "page"}, {"id": "http://letextelibre.fr/histoire/", "label": "page"}, {"id": "http://letextelibre.fr/textes/", "label": "page"}, {"id": "http://letextelibre.fr/evenements/", "label": "page"}, {"id": "http://letextelibre.fr/accueil/", "label": "page"}, {"id": "http://letextelibre.fr/jeunesse/", "label": "page"}, {"id": "http://letextelibre.fr/adulte", "label": "page"}, {"id": "http://letextelibre.fr/archive", "label": "page"}, {"id": "http://letextelibre.fr/contact", "label": "page"}, {"id": "https://www.librairies-nouvelleaquitaine.com/livre/9782203172593-planetarium-prinja-wormell/", "label": "page"}, {"id": "http://letextelibre.fr/contact/", "label": "page"}, {"id": "http://letextelibre.fr/adulte/", "label": "page"}, {"id": "http://letextelibre.fr/archive/", "label": "page"}, {"id": "http://www.google-analytics.com/__utm.gif?utmwv=5.7.2&utms=2&utmn=1913458098&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=375x667&utmvp=980x1743&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=2083495673&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365732738&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~", "label": "page"}, {"id": "https://www.google-analytics.com/__utm.gif?utmwv=5.7.2&utms=2&utmn=1913458098&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=375x667&utmvp=980x1743&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=2083495673&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365732738&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~", "label": "page"}, {"id": "http://www.google-analytics.com/__utm.gif?utmwv=5.7.2&utms=3&utmn=1167762006&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=375x667&utmvp=980x1743&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=269721638&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365732899&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~", "label": "page"}, {"id": "https://www.google-analytics.com/__utm.gif?utmwv=5.7.2&utms=3&utmn=1167762006&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=375x667&utmvp=980x1743&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=269721638&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365732899&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~", "label": "page"}, {"id": "http://www.google-analytics.com/__utm.gif?utmwv=5.7.2&utms=4&utmn=1169336725&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=667x375&utmvp=980x550&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=1887814125&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365734771&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~", "label": "page"}, {"id": "https://www.google-analytics.com/__utm.gif?utmwv=5.7.2&utms=4&utmn=1169336725&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=667x375&utmvp=980x550&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=1887814125&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365734771&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~", "label": "page"}], "links": [{"source": "http://letextelibre.fr/ijeunesse/153/", "target": "https://www.google-analytics.com/__utm.gif?utmwv=5.7.2&utms=4&utmn=1169336725&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=667x375&utmvp=980x550&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=1887814125&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365734771&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://www.google-analytics.com/__utm.gif?utmwv=5.7.2&utms=4&utmn=1169336725&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=667x375&utmvp=980x550&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=1887814125&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365734771&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "https://www.google-analytics.com/__utm.gif?utmwv=5.7.2&utms=3&utmn=1167762006&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=375x667&utmvp=980x1743&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=269721638&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365732899&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://www.google-analytics.com/__utm.gif?utmwv=5.7.2&utms=3&utmn=1167762006&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=375x667&utmvp=980x1743&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=269721638&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365732899&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "https://www.google-analytics.com/__utm.gif?utmwv=5.7.2&utms=2&utmn=1913458098&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=375x667&utmvp=980x1743&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=2083495673&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365732738&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://www.google-analytics.com/__utm.gif?utmwv=5.7.2&utms=2&utmn=1913458098&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=375x667&utmvp=980x1743&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=2083495673&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365732738&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://letextelibre.fr/ijeunesse/153/"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "https://www.librairies-nouvelleaquitaine.com/livre/9782203172593-planetarium-prinja-wormell/"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://letextelibre.fr/contact"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://letextelibre.fr/archive"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://letextelibre.fr/adulte"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://letextelibre.fr/jeunesse"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://letextelibre.fr/evenements"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://letextelibre.fr/textes"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://letextelibre.fr/histoire"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://letextelibre.fr/accueil"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "https://www.google-analytics.com/r/__utm.gif?utmwv=5.7.2&utms=1&utmn=995374424&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=800x600&utmvp=800x600&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=848437717&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365730287&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=635812088&utmredir=1&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://www.google-analytics.com/r/__utm.gif?utmwv=5.7.2&utms=1&utmn=995374424&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=800x600&utmvp=800x600&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=848437717&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365730287&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=635812088&utmredir=1&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://letextelibre.fr/media/img/headeralt3.jpg"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "https://www.google-analytics.com/ga.js"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://letextelibre.fr/media/ul/livres/planetarium_s35G7nd.jpg"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://www.google-analytics.com/ga.js"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://letextelibre.fr/media/js/ba-linkify.min.js"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://letextelibre.fr/media/css/main.css"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://letextelibre.fr/media/js/jquery.tablesorter.min.js"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "https://www.gstatic.com/charts/loader.js?key=ABQIAAAAkB7OzfQM4X9doW4zTrsnUxQLM2eb59MWLtypjUYZDMDCvfzWcRTdbMYB8Lmjzf4lJVUleuhDMv5w3g"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://www.google.com/jsapi?key=ABQIAAAAkB7OzfQM4X9doW4zTrsnUxQLM2eb59MWLtypjUYZDMDCvfzWcRTdbMYB8Lmjzf4lJVUleuhDMv5w3g"}, {"source": "http://letextelibre.fr/ijeunesse/153/", "target": "http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"}, {"source": "http://www.google.com/jsapi?key=ABQIAAAAkB7OzfQM4X9doW4zTrsnUxQLM2eb59MWLtypjUYZDMDCvfzWcRTdbMYB8Lmjzf4lJVUleuhDMv5w3g", "target": "https://www.gstatic.com/charts/loader.js?key=ABQIAAAAkB7OzfQM4X9doW4zTrsnUxQLM2eb59MWLtypjUYZDMDCvfzWcRTdbMYB8Lmjzf4lJVUleuhDMv5w3g"}, {"source": "http://www.google-analytics.com/ga.js", "target": "https://www.google-analytics.com/ga.js"}, {"source": "http://www.google-analytics.com/r/__utm.gif?utmwv=5.7.2&utms=1&utmn=995374424&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=800x600&utmvp=800x600&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=848437717&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365730287&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=635812088&utmredir=1&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~", "target": "https://www.google-analytics.com/r/__utm.gif?utmwv=5.7.2&utms=1&utmn=995374424&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=800x600&utmvp=800x600&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=848437717&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365730287&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=635812088&utmredir=1&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~"}, {"source": "http://letextelibre.fr/histoire", "target": "http://letextelibre.fr/histoire/"}, {"source": "http://letextelibre.fr/accueil", "target": "http://letextelibre.fr/accueil/"}, {"source": "http://letextelibre.fr/evenements", "target": "http://letextelibre.fr/evenements/"}, {"source": "http://letextelibre.fr/textes", "target": "http://letextelibre.fr/textes/"}, {"source": "http://letextelibre.fr/jeunesse", "target": "http://letextelibre.fr/jeunesse/"}, {"source": "http://letextelibre.fr/adulte", "target": "http://letextelibre.fr/adulte/"}, {"source": "http://letextelibre.fr/archive", "target": "http://letextelibre.fr/archive/"}, {"source": "http://letextelibre.fr/contact", "target": "http://letextelibre.fr/contact/"}, {"source": "http://www.google-analytics.com/__utm.gif?utmwv=5.7.2&utms=2&utmn=1913458098&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=375x667&utmvp=980x1743&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=2083495673&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365732738&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~", "target": "https://www.google-analytics.com/__utm.gif?utmwv=5.7.2&utms=2&utmn=1913458098&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=375x667&utmvp=980x1743&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=2083495673&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365732738&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~"}, {"source": "http://www.google-analytics.com/__utm.gif?utmwv=5.7.2&utms=3&utmn=1167762006&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=375x667&utmvp=980x1743&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=269721638&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365732899&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~", "target": "https://www.google-analytics.com/__utm.gif?utmwv=5.7.2&utms=3&utmn=1167762006&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=375x667&utmvp=980x1743&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=269721638&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365732899&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~"}, {"source": "http://www.google-analytics.com/__utm.gif?utmwv=5.7.2&utms=4&utmn=1169336725&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=667x375&utmvp=980x550&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=1887814125&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365734771&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~", "target": "https://www.google-analytics.com/__utm.gif?utmwv=5.7.2&utms=4&utmn=1169336725&utmhn=letextelibre.fr&utmcs=UTF-8&utmsr=667x375&utmvp=980x550&utmsc=24-bit&utmul=en-us&utmje=0&utmfl=-&utmdt=Le%20Texte%20Libre&utmhid=1887814125&utmr=-&utmp=%2Fijeunesse%2F153%2F&utmht=1669365734771&utmac=UA-17633547-1&utmcc=__utma%3D40244287.1845931852.1669365730.1669365730.1669365730.1%3B%2B__utmz%3D40244287.1669365730.1.1.utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B&utmjid=&utmu=qAAAAAAAAAAAAAAAAAAAAAAE~"}]
+
+    };
+    /* resolve node IDs (not optimized at all!)
+    */
+    _ref = graph.links;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      l = _ref[_i];
+      _ref2 = graph.nodes;
+      for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+        n = _ref2[_j];
+        if (l.source === n.id) {
+          l.source = n;
+          continue;
+        }
+        if (l.target === n.id) {
+          l.target = n;
+          continue;
+        }
+      }
+    }
+    /* create nodes and links
+    */
+    /* (links are drawn first to make them appear under the nodes)
+    */
+    /* also, overwrite the selections with their databound version
+    */
+    links = links.data(graph.links).enter().append('line').attr('class', 'link');
+    nodes = nodes.data(graph.nodes).enter().append('g').attr('class', 'node').call(drag);
+    nodes.append('circle').attr('r', 12);
+    /* draw the label
+    */
+    nodes.append('text').text(function(d) {
+      return d.id;
+    }).attr('dy', '0.35em');
+    /* run the force layout
+    */
+    return force.nodes(graph.nodes).links(graph.links).start();
+  };
+
+}).call(this);
+</script>
+    </body>
+</html>
