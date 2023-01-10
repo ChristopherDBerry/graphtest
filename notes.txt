@@ -1,3 +1,8 @@
+Start
+Login to https://neo4j.com/cloud/platform/aura-graph-database/ with gmail, start instance
+start flask with
+  . /env/bin/activate
+  python main.py
 Edge
   https://observablehq.com/@d3/hierarchical-edge-bundling
   https://github.com/neo4j-examples/movies-python-bolt

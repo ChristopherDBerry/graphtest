@@ -35,7 +35,6 @@ anychart.onDocumentReady(function () {
       //chart.tooltip(false);
 
       // enable chart nodes labels
-      // Don't flask escape
       {% raw %}
       chart.nodes().labels().enabled(true);
       chart.nodes().labels().format("{%label}");
@@ -46,10 +45,10 @@ anychart.onDocumentReady(function () {
       {% endraw %}
 
       // set server group nodes settings
-      //var gHtml = chart.group('text/html');
-      //if (gHtml) {
-      //  gHtml.fill('wheat');
-      //}
+      var gHtml = chart.group('text/html');
+      if (gHtml) {
+        gHtml.fill('wheat');
+      }
 
       // set server group nodes settings
       var gDisabled = chart.group('disabled');
@@ -64,13 +63,9 @@ anychart.onDocumentReady(function () {
 
       // set container id for the chart
       chart.container('container');
-      //chart.layout().iterationCount(0); //edge graph
+      chart.layout().iterationCount(0); //edge graph
       // initiate chart drawing
       chart.draw();
-
-      chart.listen("click", function(e) {
-        console.log(e)
-      })
     }
   );
 });

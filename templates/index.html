@@ -33,7 +33,6 @@ $(function () {
     d3.json("/nodes", function(error, graph) {
         if (error) return;
 
-        console.log([error, graph.nodes, graph.links]);
         force.nodes(graph.nodes).links(graph.links).start();
 
         const link = svg.selectAll(".link")
