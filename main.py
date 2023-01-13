@@ -46,8 +46,25 @@ def get_db():
     return g.neo4j_db
 
 
-def drop_db(tx, _data):
-    return tx.run("MATCH (n) DETACH DELETE n").consume()
+def drop_data(tx, _data):
+    """Delete all data, indexes, constraints"""
+    tx.run("MATCH (n) DETACH DELETE n").consume()
+    return True
+
+
+def drop_constraints(tx, _data):
+    """Delete all data, indexes, constraints"""
+    tx.run("CALL apoc.schema.assert({}, {})").consume()
+    return True
+
+
+def init_db(tx, _data):
+    """Initialise DB constraints, etc"""
+    tx.run("CREATE CONSTRAINT FOR (p:Page) REQUIRE p.url IS UNIQUE"
+           ).consume()
+    tx.run("CREATE CONSTRAINT FOR (p:Page) REQUIRE p.url IS NOT NULL"
+           ).consume()
+    return True
 
 
 @app.teardown_appcontext
@@ -63,10 +80,14 @@ def process_dexter(id):
     response = requests.get(url)
     j = response.json()
     for (url, row) in j["urls"].items():
+        if url not in j["pages"]:
+            continue
         row["url"] = url
         if "links" in row:
             row["fixed_links"] = []
             for (link, link_datas) in row["links"].items():
+                if link not in j["pages"]:
+                    continue
                 for link_data in link_datas:
                     link_data["to"] = link
                     row["fixed_links"].append(link_data)
@@ -83,7 +104,7 @@ def process_dexter(id):
 @app.route('/dexter/data/<id>')
 def dexter_data(id):
     data = process_dexter(id)
-    return jsonify(isError= False,
+    return jsonify(isError=False,
                     message= "Success",
                     statusCode= 200,
                     data= data), 200
@@ -117,8 +138,9 @@ def get_anyedgegraph():
 @app.route('/dexter/report', methods=['POST',])
 @app.route('/dexter/report/<id>')
 def dexter_report(id=None):
+    """Create new db for report"""
     def work(tx, _data):
-        return tx.run(
+        tx.run(
             "WITH $data AS value "
             "UNWIND value AS item "
             "MERGE (p:Page {url: item.url}) "
@@ -132,8 +154,9 @@ def dexter_report(id=None):
             "SET lt.redirect = l.redirect "
             "WITH p, item.diagnostics AS diags "
             "UNWIND [x in diags] AS diag "
-            "MERGE (d:DIAGNOSTIC "
+            "MERGE (d:Diag "
                 "{category: diag.category, "
+                "name: diag.name, "
                 "level: diag.level, "
                 "message: diag.message}) "
             "MERGE (p) -[:HAS_DIAG]-> (d)",
@@ -145,8 +168,10 @@ def dexter_report(id=None):
     data = process_dexter(id)
 
     db = get_db()
-    db.write_transaction(drop_db, data)
-    summary = db.write_transaction(work, data)
+    db.execute_write(drop_data, data)
+    db.execute_write(drop_constraints, data)
+    db.execute_write(init_db, data)
+    summary = db.execute_write(work, data)
     db.close()
 
     return jsonify(isError= False,
@@ -183,7 +208,6 @@ def get_nodes():
         i += 1
     rels = []
     results = db.read_transaction(links, request.args.get("limit", 100))
-    import random #XXX
     for row in results:
         rels.append({"source": node_id[row["src"]],
                      "target": node_id[row["dest"]]})
@@ -215,9 +239,10 @@ def get_d3_concept():
     node_id = {}
     for result in results:
         page = result['p']
+        label = urlparse(page.get("url")).path[:32]
         node_id[page.get("url")] = i
         node = {"id": i, "url": page.get("url"),
-                "label": page.get("url")[:32],
+                "label": label,
                 "group": page.get("mimeType")}
         if not page.get("contentTested"):
             node.update({"group": "disabled"})
@@ -245,33 +270,54 @@ def get_d3_concept():
 @app.route("/json/any/nodes")
 def get_any_nodes():
     def pages(tx, limit):
+        props = "{contentTested:true, mimeType: 'text/html'}"
+        props = "{}"
         return list(tx.run(
-            "MATCH (p:Page) "
+            "MATCH (p:Page {props}) "
             "RETURN p "
-            "LIMIT $limit",
+            "LIMIT $limit".format(props=props),
             {"limit": limit}
         ))
     def links(tx, limit):
+        props = "{contentTested:true, mimeType: 'text/html'}"
+        props = "{}"
         return list(tx.run(
-            "MATCH (s:Page)-[l:LINK_TO]->(d:Page) "
+            "MATCH (s:Page {props})-[l:LINK_TO]->(d:Page {props}) "
             "RETURN s.url AS src, l AS link, d.url AS dest "
-            "LIMIT $limit",
+            "LIMIT $limit".format(props=props),
+            {"limit": limit}
+        ))
+    def diags(tx, limit):
+        props = "{}"
+        return list(tx.run(
+            "MATCH (d:Diag {props}) "
+            "RETURN d "
+            "LIMIT $limit".format(props=props),
+            {"limit": limit}
+        ))
+    def has_diags(tx, limit):
+        props = "{}"
+        return list(tx.run(
+            "MATCH (s:Page {props})-[l:HAS_DIAG]->(d:Diag) "
+            "RETURN s.url AS src, l AS link, d.name AS name "
+            "LIMIT $limit".format(props=props),
             {"limit": limit}
         ))
 
     db = get_db()
+    #pages
     results = db.read_transaction(pages, request.args.get("limit", 10000))
-    nodes = []
     i = 0
     node_id = {}
+    diag_id = {}
+    nodes = []
     for result in results:
         page = result['p']
         node_id[page.get("url")] = i
+        label = urlparse(page.get("url")).path[:32]
         node = {"id": i, "url": page.get("url"),
-                "label": page.get("url")[:32],
-                "group": page.get("mimeType")}
-        if not page.get("contentTested"):
-            node.update({"group": "disabled"})
+                "label": label,
+                "group": 'page'}
         if page.get("screenshot"):
             node.update({ "height": 100, "width": 100,
                 "shape": "square", "stroke": "none",
@@ -279,6 +325,7 @@ def get_any_nodes():
             })
         nodes.append(node)
         i += 1
+    #links
     edges = []
     results = db.read_transaction(links, request.args.get("limit", 10000))
     for result in results:
@@ -288,6 +335,22 @@ def get_any_nodes():
         #XXX bugged? check redirect
         if link.get("redirect"):
             edge.update({'stroke': {'dash': "10 5", 'color': '#000000'}})
+        edges.append(edge)
+    #diags
+    results = db.read_transaction(diags, request.args.get("limit", 10000))
+    for result in results:
+        diag = result['d']
+        diag_id[diag.get("name")] = i
+        node = {"id": i, "label": diag['name'],
+                "group": 'diag'}
+        nodes.append(node)
+        i += 1
+    #has_diags
+    results = db.read_transaction(has_diags, request.args.get("limit", 10000))
+    for result in results:
+        edge = {"from": node_id[result["src"]],
+                "to": diag_id[result["name"]]}
+        link = result['link']
         edges.append(edge)
     return Response(dumps({"nodes": nodes, "edges": edges}),
                     mimetype="application/json")

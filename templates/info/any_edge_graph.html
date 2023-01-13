@@ -31,9 +31,6 @@ anychart.onDocumentReady(function () {
     function (data) {
       var chart = anychart.graph(data);
 
-      // disable chart tooltips
-      //chart.tooltip(false);
-
       // enable chart nodes labels
       {% raw %}
       chart.nodes().labels().enabled(true);
