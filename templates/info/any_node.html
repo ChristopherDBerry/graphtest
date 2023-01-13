@@ -38,7 +38,7 @@ anychart.onDocumentReady(function () {
       chart.nodes().labels().format("{%label}");
       chart.nodes().tooltip().useHtml(true);
       chart.nodes().tooltip().format(
-        "<span style='font-weight:bold'>{%id} </span><br>group: {%group}"
+        "<span style='font-weight:bold'>id: {%id} </span><br>url: {%url}<br>diags: {%diags}"
       );
       {% endraw %}
 
