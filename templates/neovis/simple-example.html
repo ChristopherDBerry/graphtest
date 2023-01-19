@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+<head>
+    <title>Neovis.js Simple Example</title>
+    <style type="text/css">
+        html, body {
+            font: 16pt arial;
+        }
+
+        #viz {
+            width: 100%;
+            height: 700px;
+            border: 1px solid lightgray;
+            font: 22pt arial;
+        }
+
+    </style>
+
+<script src="https://rawgit.com/neo4j-contrib/neovis.js/master/dist/neovis.js"></script>
+
+    <script
+            src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+    // define config car
+    // instantiate nodevis object
+    // draw
+
+    var viz;
+
+    function draw() {
+      // get groups with:
+         //MATCH (n:Page {page:1})-[e]->(m:Page {page:1}), (n)<-[b]-(Page{page:1}) WITH count(b) AS backlinks, n, e, m WHERE (n)<--(m) AND n<>m SET n.backlinks = backlinks RETURN DISTINCT(n) ORDER BY n.backlinks DESC LIMIT 10
+/*
+"https://www.bbk.ac.uk/about-us/modern-slavery-statement"
+"https://www.bbk.ac.uk/about-us/obituaries"
+"https://www.bbk.ac.uk/about-us/governance"
+"https://www.bbk.ac.uk/about-us/equality"
+"https://www.bbk.ac.uk/about-us/history"
+"https://www.bbk.ac.uk/about-us/mission"
+"https://www.bbk.ac.uk/about-us/bbk"
+"https://www.bbk.ac.uk/a-z-index"
+"https://www.bbk.ac.uk/about-us"
+"https://www.bbk.ac.uk/"
+*/
+      // https://neo4j-contrib.github.io/neovis.js/interfaces/NeovisConfig.html
+      // https://visjs.github.io/vis-network/docs/network/#options
+      var config = {
+        containerId: "viz",
+        neo4j: {
+          //XXX ugh... setup RO account
+          serverUrl: "{{ url }}",
+          serverUser: "{{ username }}",
+          serverPassword: "{{ password }}",
+          driverConfig: { 
+            encrypted: "ENCRYPTION_ON",
+            trust: "TRUST_SYSTEM_CA_SIGNED_CERTIFICATES"
+          }
+        },
+        labels: {
+          Page: {
+            label: "path",
+            value: "size",
+            group: "community",
+            mass: "mass"
+          }
+        },
+        relationships: {
+        },
+        visConfig: {
+          nodes: {
+            shape: "dot",
+            scaling: {
+              label: {
+                enabled: true,
+                min: 1,
+                max: 45,
+                maxVisible: 18, //If set to 30, the font will never look larger than size 30 zoomed at 100%.
+                drawThreshold: 9 //This defines a lower limit for when the font is drawn
+              }
+            },
+            shadow: {
+              enabled: true,
+            }
+          },
+          physics: {
+            stabilization: {
+              iterations: 2000
+            }
+          },
+          interaction:{
+            dragNodes: false
+          }
+        },
+        initialCypher: "MATCH (n:Page {page:1})-[e]->(m:Page {page:1}), (n)<-[b]-(Page{page:1}) "+
+          "WITH substring(n.path, 0, 12) AS community, count(b) AS backlinks, n, e, m "+
+          "WHERE (n)<--(m) AND n<>m "+
+          "SET n.size=backlinks^2, n.community=community, n.mass=backlinks^0.9 "+
+          "RETURN n,e LIMIT 5000"
+      };
+
+      viz = new NeoVis.default(config);
+      viz.render();
+
+    }
+    </script>
+</head>
+<body onload="draw()">
+<div id="viz"></div>
+
+
+Cypher query: <textarea rows="4" cols=50 id="cypher"></textarea><br>
+<input type="submit" value="Submit" id="reload">
+<input type="submit" value="Stabilize" id="stabilize">
+
+
+</body>
+
+<script>
+  $("#reload").click(function () {
+    var cypher = $("#cypher").val();
+    if (cypher.length > 3) {
+      viz.renderWithCypher(cypher);
+    } else {
+      console.log("reload");
+      viz.reload();
+    }
+  });
+  $("#stabilize").click(function () {
+    viz.stabilize();
+  })
+
+</script>
+</html>
