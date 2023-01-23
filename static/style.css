@@ -1,0 +1,15 @@
+#container {
+  float: left;
+  width: 82%;
+}
+#container-right {
+  float: right;
+  width: 16%;
+  margin: 12px;
+  height:96%;
+}
+#info {
+  height:96%;
+  border: 1px solid gray;
+  border-radius: 12px;
+}

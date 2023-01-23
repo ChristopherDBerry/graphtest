@@ -8,7 +8,7 @@
         }
 
         #viz {
-            width: 100%;
+            width: 900px;
             height: 700px;
             border: 1px solid lightgray;
             font: 22pt arial;
@@ -31,20 +31,6 @@
     var viz;
 
     function draw() {
-      // get groups with:
-         //MATCH (n:Page {page:1})-[e]->(m:Page {page:1}), (n)<-[b]-(Page{page:1}) WITH count(b) AS backlinks, n, e, m WHERE (n)<--(m) AND n<>m SET n.backlinks = backlinks RETURN DISTINCT(n) ORDER BY n.backlinks DESC LIMIT 10
-/*
-"https://www.bbk.ac.uk/about-us/modern-slavery-statement"
-"https://www.bbk.ac.uk/about-us/obituaries"
-"https://www.bbk.ac.uk/about-us/governance"
-"https://www.bbk.ac.uk/about-us/equality"
-"https://www.bbk.ac.uk/about-us/history"
-"https://www.bbk.ac.uk/about-us/mission"
-"https://www.bbk.ac.uk/about-us/bbk"
-"https://www.bbk.ac.uk/a-z-index"
-"https://www.bbk.ac.uk/about-us"
-"https://www.bbk.ac.uk/"
-*/
       // https://neo4j-contrib.github.io/neovis.js/interfaces/NeovisConfig.html
       // https://visjs.github.io/vis-network/docs/network/#options
       var config = {
@@ -61,13 +47,32 @@
         },
         labels: {
           Page: {
-            label: "path",
             value: "size",
-            group: "community",
-            mass: "mass"
+            group: "group",
+            //mass: "mass"
+          },
+          Group: {
+            label: "label",
+            group: "group",
+            value: 99,
+            [NeoVis.NEOVIS_ADVANCED_CONFIG]: {
+              static: {
+                shape: "text",
+              }
+            }
+            //hidden: true,
+            //mass: "mass"
           }
         },
         relationships: {
+          IN_GROUP: {
+            //physics: true,
+            hidden: true,
+          },
+          LINK_TO: {
+            physics: false,
+            //hidden: true,
+          },
         },
         visConfig: {
           nodes: {
@@ -76,7 +81,7 @@
               label: {
                 enabled: true,
                 min: 1,
-                max: 45,
+                max: 25,
                 maxVisible: 18, //If set to 30, the font will never look larger than size 30 zoomed at 100%.
                 drawThreshold: 9 //This defines a lower limit for when the font is drawn
               }
@@ -85,20 +90,38 @@
               enabled: true,
             }
           },
+          edges: {
+            color: {
+              opacity: 0.2,
+            },
+            hoverWidth: function (width) {return width*2;},
+            selectionWidth: function (width) {return width*3;},
+          },
           physics: {
             stabilization: {
-              iterations: 2000
+              iterations: 1000
             }
           },
           interaction:{
             dragNodes: false
           }
         },
-        initialCypher: "MATCH (n:Page {page:1})-[e]->(m:Page {page:1}), (n)<-[b]-(Page{page:1}) "+
+        initialCypher: "MATCH (n:Page {page:1})-[i:IN_GROUP]->(g:Group), "+
+          "(n)-[l:LINK_TO]->(m:Page {page:1}) "+
+          "WITH n,i,l,g,m "+
+          "WHERE (n)<--(m) AND n<>m "+
+          "RETURN n,i,g,l"
+        /*initialCypher: "MATCH (n:Page {page:1})-[e]->(m:Page {page:1}), "+
+          "(n)-[r]->(g:Group) "+
+          "WITH n, e, m, g "+
+          "WHERE (n)<--(m) AND n<>m "+
+          "SET n.size=n.backlinks^2, n.mass=n.backlinks^0.9 "+
+          "RETURN n,e,g LIMIT 5000"*/
+        /*initialCypher: "MATCH (n:Page {page:1})-[e]->(m:Page {page:1}), (n)<-[b]-(Page{page:1}) "+
           "WITH substring(n.path, 0, 12) AS community, count(b) AS backlinks, n, e, m "+
           "WHERE (n)<--(m) AND n<>m "+
           "SET n.size=backlinks^2, n.community=community, n.mass=backlinks^0.9 "+
-          "RETURN n,e LIMIT 5000"
+          "RETURN n,e LIMIT 5000"*/
       };
 
       viz = new NeoVis.default(config);

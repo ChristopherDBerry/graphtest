@@ -12,6 +12,7 @@
         padding: 0;
       }
     </style>
+    <link href="/static/style.css" rel="stylesheet">
 </head>
 
 <body>
@@ -21,7 +22,21 @@
   <script src="https://cdn.anychart.com/releases/v8/js/anychart-ui.min.js"></script>
   <script src="https://cdn.anychart.com/releases/v8/js/anychart-exports.min.js"></script>
 
-<div id="container"></div>
+  <div id='container-right'>
+    <label for="distance">Distance from homepage:</label>
+    <select id="distance" name="distance">
+      <option value="0">0</option>
+      <option value="1" selected="selected">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+    </select>
+    <br><br>
+    <div id="info">
+    </div>
+  </div>
+
+  <div id="container"></div>
 
 <script>
 
@@ -38,8 +53,16 @@ anychart.onDocumentReady(function () {
       chart.nodes().labels().format("{%label}");
       chart.nodes().tooltip().useHtml(true);
       chart.nodes().tooltip().format(
-        "<span style='font-weight:bold'>id: {%id} </span><br>url: {%url}<br>diags: {%diags}"
+        "<span style='font-weight:bold'>id: {%id} </span><br>" +
+        "url: {%url}<br>" +
+        "diags: {%diags}<br>" +
+        "errors: {%errors}<br>" +
+        "warnings: {%warnings}<br>"
       );
+      chart.nodes().normal().height(40);
+      //chart.edges().normal().stroke("#a0a0a0", 0);
+      //chart.edges().hovered().stroke("#a0a0a0", 1);
+      //chart.edges().selected().stroke("#a0a0a0", 1);
       {% endraw %}
 
       // set server group nodes settings
@@ -70,6 +93,7 @@ anychart.onDocumentReady(function () {
         gDiag.shape('circle');
       }
 
+
       // enable edge arrows and set arrow size
       // XXX fix for direction
       // multi direction not possible, use arrows 'from' selected node
@@ -79,6 +103,7 @@ anychart.onDocumentReady(function () {
 
       // set container id for the chart
       chart.container('container');
+      chart.layout().iterationCount(18);
       chart.draw();
 
       chart.listen("click", function(e) {
