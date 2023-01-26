@@ -51,9 +51,9 @@
             group: "group",
             //mass: "mass"
           },
-          Group: {
+          Cluster: {
             label: "label",
-            group: "group",
+            group: "label",
             value: 99,
             [NeoVis.NEOVIS_ADVANCED_CONFIG]: {
               static: {
@@ -65,7 +65,7 @@
           }
         },
         relationships: {
-          IN_GROUP: {
+          IN_CLUSTER: {
             //physics: true,
             hidden: true,
           },
@@ -78,9 +78,22 @@
           nodes: {
             shape: "dot",
             scaling: {
+              min: 0,
+              max: 25,
+              customScalingFunction:
+function (min,max,total,value) {
+  return 0;
+  if (max === min) {
+    return 0.5;
+  }
+  else {
+    var scale = 1 / (max - min);
+    return Math.max(0,(value - min)*scale);
+  }
+},
               label: {
                 enabled: true,
-                min: 1,
+                min: 8,
                 max: 25,
                 maxVisible: 18, //If set to 30, the font will never look larger than size 30 zoomed at 100%.
                 drawThreshold: 9 //This defines a lower limit for when the font is drawn
@@ -94,8 +107,24 @@
             color: {
               opacity: 0.2,
             },
-            hoverWidth: function (width) {return width*2;},
-            selectionWidth: function (width) {return width*3;},
+            //hoverWidth: function (width) {return width*2;},
+            //selectionWidth: function (width) {return width*3;},
+            value: 0,
+            scaling: {
+              min: 0,
+              max: 0,
+              customScalingFunction:
+function (min,max,total,value) {
+  return 0;
+  if (max === min) {
+    return 0.5;
+  }
+  else {
+    var scale = 1 / (max - min);
+    return Math.max(0,(value - min)*scale);
+  }
+},
+            },
           },
           physics: {
             stabilization: {
@@ -106,11 +135,11 @@
             dragNodes: false
           }
         },
-        initialCypher: "MATCH (n:Page {page:1})-[i:IN_GROUP]->(g:Group), "+
+        initialCypher: "MATCH (n:Page {page:1})-[i:IN_CLUSTER]->(c:Cluster), "+
           "(n)-[l:LINK_TO]->(m:Page {page:1}) "+
-          "WITH n,i,l,g,m "+
+          "WITH n,i,l,c,m "+
           "WHERE (n)<--(m) AND n<>m "+
-          "RETURN n,i,g,l"
+          "RETURN n,i,c,l"
         /*initialCypher: "MATCH (n:Page {page:1})-[e]->(m:Page {page:1}), "+
           "(n)-[r]->(g:Group) "+
           "WITH n, e, m, g "+

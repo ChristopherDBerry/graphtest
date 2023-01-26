@@ -49,25 +49,22 @@ def get_db():
         return g.neo4j_db
 
 
-def drop_data(tx, _data):
+def drop_data(tx):
     """Delete all data, indexes, constraints"""
     tx.run("MATCH (n) DETACH DELETE n").consume()
-    return True
 
 
-def drop_constraints(tx, _data):
+def drop_constraints(tx):
     """Delete all data, indexes, constraints"""
     tx.run("CALL apoc.schema.assert({}, {})").consume()
-    return True
 
 
-def init_db(tx, _data):
+def init_db(tx):
     """Initialise DB constraints, etc"""
     tx.run("CREATE CONSTRAINT FOR (p:Page) REQUIRE p.url IS UNIQUE"
            ).consume()
     tx.run("CREATE CONSTRAINT FOR (p:Page) REQUIRE p.url IS NOT NULL"
            ).consume()
-    return True
 
 
 @app.teardown_appcontext
@@ -140,13 +137,6 @@ def get_anyedgegraph():
     return render_template("/info/any_edge_graph.html")
 
 
-#XXX harcoded, can get with 
-#MATCH (n:Page {page:1})-[e]->(m:Page {page:1}), (n)<-[b]-(Page{page:1}) WITH count(b) AS backlinks, n, e, m WHERE (n)<--(m) AND n<>m SET n.backlinks = backlinks RETURN DISTINCT(n) ORDER BY n.backlinks DESC LIMIT 10
-
-GROUPS = [
-]
-
-
 @app.route('/dexter/report', methods=['POST',])
 @app.route('/dexter/report/<id>')
 def dexter_report(id=None):
@@ -166,7 +156,7 @@ def dexter_report(id=None):
         ).consume()
 
     def links(tx, _data):
-        #XXXadd weight
+        #XXX add weight
         tx.run(
             "WITH $data AS value "
             "UNWIND value AS item "
@@ -205,29 +195,90 @@ def dexter_report(id=None):
             "SET n.mass=n.backlinks^0.9 "
         ).consume()
 
-    def create_groups(tx, _groups=10):
+    def get_cluster_urls(tx, _limit=200):
+        #XXX
         result = tx.run(
-            "MATCH (n:Page {page:1}) "
-            "WHERE n.backlinks>0 "
-            "WITH n.url AS url, n.backlinks AS backlinks "
-            "ORDER BY n.backlinks DESC LIMIT $groups "
-            "MERGE (g:Group {label:url, backlinks:backlinks, "
-            "mass:1.0, group:url}) "
-            "RETURN g.label ORDER BY size(g.label) DESC",
-            {"groups": _groups})
-        return list(result)
+            "MATCH (p:Page {page:1}) "
+            "WHERE p.backlinks>0 "
+            "RETURN p.url "
+            "ORDER BY p.backlinks DESC LIMIT $limit ",
+            {"limit": _limit})
+        return [x["p.url"] for x in list(result)]
 
-    def assign_groups(tx, _label):
+#   def get_groups(tx, _groups=100):
+#       result = tx.run(
+#           "MATCH (n:Page {page:1}) "
+#           "WHERE n.backlinks>0 "
+#           "RETURN n "
+#           "ORDER BY n.backlinks DESC LIMIT $groups ",
+#           {"groups": _groups})
+#       return list(result)
+
+    def sort_cluster_urls(cluster_node_urls, limit=8):
+      """Sort cluster_node urls by shortest, 'most different' first"""
+      presorted = [[], ]
+      for url in cluster_node_urls:
+        position = 0
+        for list_index, nodes in enumerate(presorted):
+            l = list([(pos, (last_pos, x)) for (pos, (last_pos, x))
+                in enumerate(nodes) if url.startswith(x)])
+            if not l:
+                break
+            else:
+                position = l[0][0]
+        else:
+            list_index +=1
+        if list_index >= len(presorted):
+            presorted.append([])
+        presorted[list_index].append((position, url))
+      sorted_urls = []
+      for urls in presorted:
+          for _, url in urls:
+              sorted_urls.append(url)
+              if len(sorted_urls) >= limit:
+                  sorted_urls.reverse()
+                  return sorted_urls
+      sorted_urls.reverse()
+      return sorted_urls
+
+    def create_cluster_node(tx, _url):
         tx.run(
-            "MATCH (g:Group {label:$label}) "
-            "WITH g, g.label AS label, size(g.label) AS label_len "
-            "ORDER BY label_len DESC MATCH (p:Page {page:1}) "
-            "WHERE left(p.url, label_len)=label AND NOT (p)-->(:Group) "
-            "MERGE (p)-[r:IN_GROUP]->(g) "
-            "SET p.group=g.group "
-            "RETURN p,r,g",
-            {"label": _label}
+            "MERGE (c:Cluster {label: $url}) "
+            "WITH c, size(c.label) AS label_len "
+            "ORDER BY label_len DESC "
+            "MATCH (p:Page {page:1}) "
+            "WHERE left(p.url, label_len)=c.label AND NOT (p)-->(:Cluster) "
+            "MERGE (p)-[r:IN_CLUSTER]->(c) "
+            "SET p.group=c.label ",
+            {"url": _url}
         ).consume()
+
+
+#   def create_groups(tx, _groups=10):
+#       #XXX groups should be ~ 10% total node, minimum 10
+#       result = tx.run(
+#           "MATCH (n:Page {page:1}) "
+#           "WHERE n.backlinks>0 "
+#           "WITH n.url AS url, n.backlinks AS backlinks "
+#           "ORDER BY n.backlinks DESC LIMIT $groups "
+#           "MERGE (g:Group {label:url, backlinks:backlinks, "
+#           "mass:1.0, group:url}) "
+#           "RETURN g.label ORDER BY size(g.label) DESC",
+#           {"groups": _groups})
+#       return list(result)
+
+#   def assign_groups(tx, _label):
+#       tx.run(
+#           "MATCH (g:Group {label:$label}) "
+#           "WITH g, g.label AS label, size(g.label) AS label_len "
+#           "ORDER BY label_len DESC "
+#           "MATCH (p:Page {page:1}) "
+#           "WHERE left(p.url, label_len)=label AND NOT (p)-->(:Group) "
+#           "MERGE (p)-[r:IN_GROUP]->(g) "
+#           "SET p.group=g.group "
+#           "RETURN p,r,g",
+#           {"label": _label}
+#       ).consume()
 
     if not id:
         id = request.form.get('id')
@@ -235,19 +286,31 @@ def dexter_report(id=None):
     data = process_dexter(id)
 
     db = get_db()
-    db.execute_write(drop_data, data)
-    db.execute_write(drop_constraints, data)
-    db.execute_write(init_db, data)
-    db.execute_write(pages, data)
-    db.execute_write(links, data)
-    db.execute_write(diags, data)
-    db.execute_write(set_backlinks)
-    groups = db.execute_write(create_groups, 10)
-    for group in groups:
-        label = group['g.label']
-        db.execute_write(assign_groups, label)
-    label = data[0]['url']
-    db.execute_write(assign_groups, label)
+    db.execute_write(drop_data)
+    db.execute_write(drop_constraints)
+    db.execute_write(init_db)
+    SET_SIZE = 50 # Limit large data sets
+    data_subset = []
+    for (n, row) in enumerate(data):
+        data_subset.append(row)
+        if n % SET_SIZE == 0:
+            db.execute_write(pages, data_subset)
+            data_subset = []
+            break
+    else:
+        db.execute_write(pages, data_subset)
+#   db.execute_write(links, data)
+#   db.execute_write(diags, data)
+#   db.execute_write(set_backlinks)
+#   cluster_urls = db.execute_read(get_cluster_urls)
+#   cluster_urls = sort_cluster_urls(cluster_urls)
+#   for url in cluster_urls:
+#       db.execute_write(create_cluster_node, url)
+#   for group in groups:
+#       label = group['g.label']
+#       db.execute_write(assign_groups, label)
+#   label = data[0]['url']
+#   db.execute_write(assign_groups, label)
     db.close()
 
     return jsonify(isError= False,
@@ -339,6 +402,7 @@ def get_d3_concept():
     return Response(dumps({"nodes": nodes, "edges": edges}),
                     mimetype="application/json")
 
+
 @app.route("/json/any/nodes")
 def get_any_nodes():
     def pages(tx):
@@ -414,8 +478,8 @@ def get_any_nodes():
             group = 'error'
         node = {"id": i, "url": url,
                 "label": label, 'diags': diags_count,
-                'errors': diag_errors[url],
-                'warnings': diag_warnings[url],
+                'errors': diag_errors.get(url, 0),
+                'warnings': diag_warnings.get(url, 0),
                 "group": group}
         if page.get("screenshot"):
             node["screenshot_url"] = page["screenshot"]
@@ -425,6 +489,8 @@ def get_any_nodes():
     edges = []
     results = db.execute_read(links, request.args.get("limit", 10000))
     for result in results:
+        if (result["src"] not in node_id or result["dest"] not in node_id):
+            continue
         edge = {"from": node_id[result["src"]],
                 "to": node_id[result["dest"]]}
         if result["src"] == homepage or result["dest"] == homepage:
@@ -438,13 +504,98 @@ def get_any_nodes():
     return Response(dumps({"nodes": nodes, "edges": edges}),
                     mimetype="application/json")
 
-#neovis charts
-@app.route('/neovis/')
-def neovis_simple():
-    return render_template('neovis/simple-example.html',
+
+@app.route("/json/vis/pages.json")
+def get_vis_pages():
+    def clusters(tx):
+        return list(tx.run("MATCH (c: Cluster) "
+            "RETURN c"))
+    def pages(tx):
+        return list(tx.run("MATCH (p:Page {page: 1}) "
+            "RETURN p"))
+    def cluster_links(tx):
+        return list(tx.run("MATCH (p:Page {page: 1})-[r]->"
+            "(c: Cluster) RETURN p, r, c"))
+    db = get_db()
+    #{ id: 1, label: "Node 1" }
+    i = 0
+    cluster_id = {}
+    node_id = {}
+    diag_id = {}
+    nodes = []
+    edges = []
+    hompage = ''
+    results = db.execute_read(pages)
+    for result in results:
+        page = result['p']
+        url = page.get("url")
+        group = page.get("group")
+        if page.get('homePage') and page['homePage'] == 1:
+            homepage = url
+        node_id[url] = i
+        label = urlparse(url).path[:32]
+        node = {"id": i, "url": url, "group": group,
+                "label": label, "value": page.get("size", 0),}
+               # "mass": page.get("mass", 1)}
+        if page.get("screenshot"):
+            node["screenshot_url"] = page["screenshot"]
+        nodes.append(node)
+        i += 1
+    results = db.execute_read(clusters)
+    for result in results:
+        label = result['c']['label']
+        node = {"id": i, "label": label, 'group': 'cluster', }
+        nodes.append(node)
+        cluster_id[label] = i
+        i += 1
+    results = db.execute_read(cluster_links)
+    for result in results:
+        page = result['p']
+        cluster = result['c']
+        edge = {"from": node_id[page["url"]],
+                "to": cluster_id[cluster["label"]]}
+        edges.append(edge)
+    #link clusters
+    prev_url = first_url = ''
+    for url in cluster_id:
+        if prev_url:
+            edge = {"from": cluster_id[url],
+                    "to": cluster_id[prev_url],}
+                 #   "length": 99}
+            edges.append(edge)
+        else:
+            first_url = url
+        prev_url = url
+    else:
+        edge = {"from": cluster_id[first_url],
+                "to": cluster_id[url],
+                "length": 99}
+        edges.append(edge)
+    return Response(dumps({"nodes": nodes, "edges": edges}),
+                    mimetype="application/json")
+
+
+#vis charts
+@app.route('/vis/')
+def vis_simple():
+    return render_template('vis/test1.html',
                            url = NEO4J_URL,
                            username=username, password=password)
 
+#vis charts
+@app.route('/vis/cluster')
+def vis_cluster():
+    return render_template('vis/cluster.html',
+                           url = NEO4J_URL,
+                           username=username, password=password)
+
+
+#neovis charts
+@app.route('/neovis/')
+def neovis_simple():
+    return render_template('neovis/test1.html',
+                           url = NEO4J_URL,
+                           username=username, password=password)
 
 
 if __name__ == "__main__":
