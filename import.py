@@ -31,6 +31,7 @@ class Importer:
 
     def __init__(self, url, user, password):
         self.data_pages = []
+        self.data_nodes = []
         self.data_paths = {}
         self.data_links = {}
         self.driver = GraphDatabase.driver(url, auth=(user, password))
@@ -62,24 +63,23 @@ class Importer:
             "WITH $data AS value "
             "UNWIND value AS item "
             "MERGE (p:Page {url: item.url}) "
-            "SET p.screenshot = item.screenshot.storage "
-            "SET p.contentTested = item.contentTested "
-            "SET p.mimeType = item.mimeType "
-            "SET p.page = item.page "
-            "SET p.path = item.path "
-            "SET p.homePage = item.homePage ",
+            "SET p.screenshot = item.screenshot.storage, "
+            "p.contentTested = item.contentTested,"
+            "p.mimeType = item.mimeType, "
+            "p.page = item.page, p.path = item.path, "
+            "p.backlinks = 0, p.size = 1, p.mass = 1, "
+            "p.homePage = item.homePage ",
             {"data": _data}
         ).consume()
 
     @staticmethod
     def links(tx, _data):
-        #XXX add weight
         tx.run(
             "WITH $data AS value "
             "UNWIND value AS item "
             "MATCH (f:Page {url: item.from}), "
             "(t:Page {url: item.to}) "
-            "MERGE (f)-[lt:LINK_TO]->(t)",
+            "MERGE (f)-[lt:LINK_TO {weight: item.weight}]->(t)",
             {"data": _data}
         ).consume()
 
@@ -102,31 +102,40 @@ class Importer:
 
     @staticmethod
     def set_backlinks(tx):
-        #add weights to backlinks
         tx.run(
             "MATCH (n:Page {page:1})-[e]->(m:Page {page:1}), "
             "(n)<-[b]-(Page{page:1}) "
             "WITH count(b) AS backlinks, n, e, m "
             "WHERE (n)<--(m) AND n<>m "
             "SET n.backlinks = backlinks "
-            "SET n.size=n.backlinks^2 "
+            "SET n.size=n.backlinks^1.3 "
             "SET n.mass=n.backlinks^0.9 "
+        ).consume()
+        #add weights to backlinks
+        tx.run(
+            "MATCH (n:Page {page:1})-[l]->(m:Page {page:1}) "
+            "SET l.weight=n.backlinks"
         ).consume()
 
     @staticmethod
-    def get_cluster_urls(tx, _limit=200):
-        #XXX
+    def get_cluster_urls(tx):
+        result = tx.run("MATCH (n:Page {page:1}) "
+            "RETURN COUNT(n) AS total")
+        limit = int(result.single()['total'] / 4)
         result = tx.run(
             "MATCH (p:Page {page:1}) "
             "WHERE p.backlinks>0 "
-            "RETURN p.url "
+            "RETURN p.url AS url "
             "ORDER BY p.backlinks DESC LIMIT $limit ",
-            {"limit": _limit})
-        return [x["p.url"] for x in list(result)]
+            {"limit": limit})
+        return [x["url"] for x in list(result)]
 
     @staticmethod
-    def sort_cluster_urls(cluster_node_urls, limit=8):
+    def sort_cluster_urls(tx, cluster_node_urls):
       """Sort cluster_node urls by shortest, 'most different' first"""
+      result = tx.run("MATCH (n:Page {page:1}) "
+            "RETURN COUNT(n) AS total")
+      limit = int(result.single()['total'] / 20)
       presorted = [[], ]
       for url in cluster_node_urls:
         position = 0
@@ -147,9 +156,7 @@ class Importer:
           for _, url in urls:
               sorted_urls.append(url)
               if len(sorted_urls) >= limit:
-                  sorted_urls.reverse()
                   return sorted_urls
-      sorted_urls.reverse()
       return sorted_urls
 
     @staticmethod
@@ -169,26 +176,28 @@ class Importer:
         """Process dexter results to be more neo4j-able"""
         data = []
         url = "https://dxtfs.com/%s(application,json)" % did
+        log.warning("Fetching %s" % url)
         response = requests.get(url)
-#       j = response.json()
-#       homepage = j["pages"][0]
-#       for (url, row) in j["urls"].items():
         body = response.text
-        jpages = ijson.items(body, 'pages')
         homepage = ''
-        pages = []
-        for page in jpages:
-            if not homepage:
-                homepage = page
-            pages.append(page)
+        log.warning("Parsing pages")
+        pages_container = ijson.items(body, 'pages')
+        for pages in pages_container:
+            for page in pages:
+                if not homepage:
+                    homepage = page
+                self.data_pages.append(page)
         body = response.text
         items = ijson.kvitems(body, 'urls')
+        log.warning("Parsing urls")
         for (url, row) in items:
-            print(url)
             page = {}
             #XXX skip repeated paths, may need to refine later
             path = urlparse(url).path
             if path in self.data_paths:
+                continue
+            #XXX optimizer
+            if url not in self.data_pages:
                 continue
             else:
                 self.data_paths[path] = 1
@@ -200,25 +209,29 @@ class Importer:
                 page['contentTested'] = row['contentTested']
             if 'screenshot' in row:
                 page['screenshot'] = row['screenshot']
-            if url in pages:
+            if url in self.data_pages:
                 page["page"] = 1
-                page["path"] = path #urlparse(url).path
+                page["path"] = path
             if url == homepage:
                 page["homePage"] = 1
-            self.data_pages.append(page)
+            self.data_nodes.append(page)
             for link in row.get("links", {}).keys():
-                #XXX add weight
-                self.data_links[(url, link)] = 1
+                #XXX improve weight- link viz, footer, backlinks, etc
+                if url in self.data_pages and link in self.data_pages:
+                    self.data_links[(url, link)
+                        ] = self.data_links.setdefault((url, link), 0) + 1
 
     def run(self, did):
+        log.warning("Process Dexter")
         self.process_dexter(did)
         with self.driver.session() as session:
+            log.warning("Drop DB")
             session.execute_write(self.drop_data)
             session.execute_write(self.drop_constraints)
             session.execute_write(self.init_db)
-            SET_SIZE = 1000 # Limit large data sets
+            SET_SIZE = 250 # Limit large data sets
             data_subset = []
-            for (n, row) in enumerate(self.data_pages, 1):
+            for (n, row) in enumerate(self.data_nodes, 1):
                 data_subset.append(row)
                 if n % SET_SIZE == 0:
                     session.execute_write(self.pages, data_subset)
@@ -229,7 +242,8 @@ class Importer:
                 log.warning("%d pages" % n)
             data_subset = []
             for (n, row) in enumerate(self.data_links.keys(), 1):
-                data_subset.append({'from': row[0], 'to': row[1]})
+                data_subset.append({'from': row[0], 'to': row[1],
+                    'weight': self.data_links[row]})
                 if n % SET_SIZE == 0:
                     session.execute_write(self.links, data_subset)
                     data_subset = []
@@ -241,7 +255,8 @@ class Importer:
             session.execute_write(self.set_backlinks)
             log.warning("building clusters")
             cluster_urls = session.execute_read(self.get_cluster_urls)
-            cluster_urls = self.sort_cluster_urls(cluster_urls)
+            cluster_urls = session.execute_read(self.sort_cluster_urls, cluster_urls)
+            cluster_urls.reverse()
             for url in cluster_urls:
                 session.execute_write(self.create_cluster_node, url)
 
