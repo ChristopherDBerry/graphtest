@@ -136,189 +136,6 @@ def get_anychart():
 def get_anyedgegraph():
     return render_template("/info/any_edge_graph.html")
 
-
-@app.route('/dexter/report', methods=['POST',])
-@app.route('/dexter/report/<id>')
-def dexter_report(id=None):
-    """Create new db for report"""
-    def pages(tx, _data):
-        tx.run(
-            "WITH $data AS value "
-            "UNWIND value AS item "
-            "MERGE (p:Page {url: item.url}) "
-            "SET p.screenshot = item.screenshot.storage "
-            "SET p.contentTested = item.contentTested "
-            "SET p.mimeType = item.mimeType "
-            "SET p.page = item.page "
-            "SET p.path = item.path "
-            "SET p.homePage = item.homePage ",
-            {"data": _data}
-        ).consume()
-
-    def links(tx, _data):
-        #XXX add weight
-        tx.run(
-            "WITH $data AS value "
-            "UNWIND value AS item "
-            "MATCH (p:Page {url: item.url}) "
-            "UNWIND [x IN item.links] AS link "
-            "MATCH (l:Page {url: link.to}) "
-            "MERGE (p)-[lt:LINK_TO]->(l)",
-            {"data": _data}
-        ).consume()
-
-    def diags(tx, _data):
-        tx.run(
-            "WITH $data AS value "
-            "UNWIND value AS item "
-            "MATCH (p:Page {url: item.url}) "
-            "WITH p, item.diagnostics AS diags "
-            "UNWIND [x in diags] AS diag "
-            "MERGE (d:Diag "
-                "{category: diag.category, "
-                "name: diag.name, "
-                "level: diag.level, "
-                "message: diag.message}) "
-            "MERGE (p) -[:HAS_DIAG]-> (d)",
-            {"data": _data}
-        ).consume()
-
-    def set_backlinks(tx):
-        #add weights to backlinks
-        tx.run(
-            "MATCH (n:Page {page:1})-[e]->(m:Page {page:1}), "
-            "(n)<-[b]-(Page{page:1}) "
-            "WITH count(b) AS backlinks, n, e, m "
-            "WHERE (n)<--(m) AND n<>m "
-            "SET n.backlinks = backlinks "
-            "SET n.size=n.backlinks^2 "
-            "SET n.mass=n.backlinks^0.9 "
-        ).consume()
-
-    def get_cluster_urls(tx, _limit=200):
-        #XXX
-        result = tx.run(
-            "MATCH (p:Page {page:1}) "
-            "WHERE p.backlinks>0 "
-            "RETURN p.url "
-            "ORDER BY p.backlinks DESC LIMIT $limit ",
-            {"limit": _limit})
-        return [x["p.url"] for x in list(result)]
-
-#   def get_groups(tx, _groups=100):
-#       result = tx.run(
-#           "MATCH (n:Page {page:1}) "
-#           "WHERE n.backlinks>0 "
-#           "RETURN n "
-#           "ORDER BY n.backlinks DESC LIMIT $groups ",
-#           {"groups": _groups})
-#       return list(result)
-
-    def sort_cluster_urls(cluster_node_urls, limit=8):
-      """Sort cluster_node urls by shortest, 'most different' first"""
-      presorted = [[], ]
-      for url in cluster_node_urls:
-        position = 0
-        for list_index, nodes in enumerate(presorted):
-            l = list([(pos, (last_pos, x)) for (pos, (last_pos, x))
-                in enumerate(nodes) if url.startswith(x)])
-            if not l:
-                break
-            else:
-                position = l[0][0]
-        else:
-            list_index +=1
-        if list_index >= len(presorted):
-            presorted.append([])
-        presorted[list_index].append((position, url))
-      sorted_urls = []
-      for urls in presorted:
-          for _, url in urls:
-              sorted_urls.append(url)
-              if len(sorted_urls) >= limit:
-                  sorted_urls.reverse()
-                  return sorted_urls
-      sorted_urls.reverse()
-      return sorted_urls
-
-    def create_cluster_node(tx, _url):
-        tx.run(
-            "MERGE (c:Cluster {label: $url}) "
-            "WITH c, size(c.label) AS label_len "
-            "ORDER BY label_len DESC "
-            "MATCH (p:Page {page:1}) "
-            "WHERE left(p.url, label_len)=c.label AND NOT (p)-->(:Cluster) "
-            "MERGE (p)-[r:IN_CLUSTER]->(c) "
-            "SET p.group=c.label ",
-            {"url": _url}
-        ).consume()
-
-
-#   def create_groups(tx, _groups=10):
-#       #XXX groups should be ~ 10% total node, minimum 10
-#       result = tx.run(
-#           "MATCH (n:Page {page:1}) "
-#           "WHERE n.backlinks>0 "
-#           "WITH n.url AS url, n.backlinks AS backlinks "
-#           "ORDER BY n.backlinks DESC LIMIT $groups "
-#           "MERGE (g:Group {label:url, backlinks:backlinks, "
-#           "mass:1.0, group:url}) "
-#           "RETURN g.label ORDER BY size(g.label) DESC",
-#           {"groups": _groups})
-#       return list(result)
-
-#   def assign_groups(tx, _label):
-#       tx.run(
-#           "MATCH (g:Group {label:$label}) "
-#           "WITH g, g.label AS label, size(g.label) AS label_len "
-#           "ORDER BY label_len DESC "
-#           "MATCH (p:Page {page:1}) "
-#           "WHERE left(p.url, label_len)=label AND NOT (p)-->(:Group) "
-#           "MERGE (p)-[r:IN_GROUP]->(g) "
-#           "SET p.group=g.group "
-#           "RETURN p,r,g",
-#           {"label": _label}
-#       ).consume()
-
-    if not id:
-        id = request.form.get('id')
-
-    data = process_dexter(id)
-
-    db = get_db()
-    db.execute_write(drop_data)
-    db.execute_write(drop_constraints)
-    db.execute_write(init_db)
-    SET_SIZE = 50 # Limit large data sets
-    data_subset = []
-    for (n, row) in enumerate(data):
-        data_subset.append(row)
-        if n % SET_SIZE == 0:
-            db.execute_write(pages, data_subset)
-            data_subset = []
-            break
-    else:
-        db.execute_write(pages, data_subset)
-#   db.execute_write(links, data)
-#   db.execute_write(diags, data)
-#   db.execute_write(set_backlinks)
-#   cluster_urls = db.execute_read(get_cluster_urls)
-#   cluster_urls = sort_cluster_urls(cluster_urls)
-#   for url in cluster_urls:
-#       db.execute_write(create_cluster_node, url)
-#   for group in groups:
-#       label = group['g.label']
-#       db.execute_write(assign_groups, label)
-#   label = data[0]['url']
-#   db.execute_write(assign_groups, label)
-    db.close()
-
-    return jsonify(isError= False,
-                    message= "Success",
-                    statusCode= 200,
-                    data= data), 200
-
-
 @app.route("/nodes")
 def get_nodes():
     def pages(tx, limit):
@@ -403,103 +220,52 @@ def get_d3_concept():
                     mimetype="application/json")
 
 
-@app.route("/json/any/nodes")
-def get_any_nodes():
+@app.route("/json/vis/hierarchy.json")
+def get_vis_hierarchy():
     def pages(tx):
-        return list(tx.run("MATCH (p:Page)-->(d:Diag) "
-            "WITH p, COUNT(d) AS diags "
-            "RETURN p, diags ", {} ))
-    #XXX probably a better way to do this
-    def warning(tx):
-        return list(tx.run("MATCH (p:Page)-->(m:Diag) "
-            "WHERE m.level='moderate' WITH p, COUNT(m) AS moderate "
-            "RETURN p, moderate", {} ))
-    def error(tx):
-        return list(tx.run("MATCH (p:Page)-->(s:Diag) "
-            "WHERE s.level='serious' WITH p, COUNT(s) AS serious "
-            "RETURN p, serious", {} ))
-    def links(tx, limit):
-        props = "{contentTested:true, mimeType: 'text/html'}"
-        props = "{}"
-        return list(tx.run(
-            "MATCH (s:Page {props})-[l:LINK_TO]->(d:Page {props}) "
-            "RETURN s.url AS src, l AS link, d.url AS dest "
-            "LIMIT $limit".format(props=props),
-            {"limit": limit}
-        ))
-    def diags(tx, limit):
-        props = "{}"
-        return list(tx.run(
-            "MATCH (d:Diag {props}) "
-            "RETURN d "
-            "LIMIT $limit".format(props=props),
-            {"limit": limit}
-        ))
-    def has_diags(tx, limit):
-        props = "{}"
-        return list(tx.run(
-            "MATCH (s:Page {props})-[l:HAS_DIAG]->(d:Diag) "
-            "RETURN s.url AS src, l AS link, d.name AS name "
-            "LIMIT $limit".format(props=props),
-            {"limit": limit}
-        ))
-
+        return list(tx.run("MATCH (p:Page {homePage: 1})-[l]->(q:Page) "
+            "WHERE p<>q "
+            "RETURN p,l,q"))
     db = get_db()
-    #diags
-    diag_errors = {}
-    diag_warnings = {}
-    results = db.execute_read(error)
-    for result in results:
-        page = result['p']
-        diag_errors[page['url']] = result['serious']
-    results = db.execute_read(warning)
-    for result in results:
-        page = result['p']
-        diag_warnings[page['url']] = result['moderate']
-    #pages
-    results = db.execute_read(pages)
     i = 0
+    cluster_id = {}
     node_id = {}
     diag_id = {}
     nodes = []
-    hompage = ''
+    edges = []
+    inserted_edges = []
+    homepage = ''
+    results = db.execute_read(pages)
     for result in results:
-        page = result['p']
-        url = page.get("url")
-        if page.get('homePage') and page['homePage'] == 1:
+        if not homepage:
+            page = result['p']
+            url = page.get("url")
             homepage = url
-        diags_count = result['diags']
-        node_id[url] = i
-        label = urlparse(url).path[:32]
-        group = 'good'
-        if diag_warnings.get(url):
+            homepage_id = i
+            group = page.get("group")
+            label = urlparse(url).path[:32]
+            node_id[url] = i
+            node = {"id": i, "url": url, "group": group,
+                    "label": label, "value": page.get("size", 0),}
+            nodes.append(node)
+            i += 1
+        page = result['q']
+        url = page.get("url")
+        errors = page.get("errors")
+        warnings = page.get("warnings")
+        group = 'ok'
+        if warnings > 2:
             group = 'warning'
-        if diag_errors.get(url):
+        if errors > 2:
             group = 'error'
-        node = {"id": i, "url": url,
-                "label": label, 'diags': diags_count,
-                'errors': diag_errors.get(url, 0),
-                'warnings': diag_warnings.get(url, 0),
-                "group": group}
-        if page.get("screenshot"):
-            node["screenshot_url"] = page["screenshot"]
+        label = urlparse(url).path[:32]
+        node_id[url] = i
+        node = {"id": i, "url": url, "group": group,
+                "errors": errors, "warnings": warnings,
+                "label": label, "value": page.get("size", 0),}
         nodes.append(node)
         i += 1
-    #links
-    edges = []
-    results = db.execute_read(links, request.args.get("limit", 10000))
-    for result in results:
-        if (result["src"] not in node_id or result["dest"] not in node_id):
-            continue
-        edge = {"from": node_id[result["src"]],
-                "to": node_id[result["dest"]]}
-        if result["src"] == homepage or result["dest"] == homepage:
-            edge["normal"] = {"stroke": {"color": "#a0a0a0", "thickness": 1}}
-        else:
-            edge["normal"] = {"stroke": {"color": "#a0a0a0", "thickness": 0}}
-            edge["hovered"] = {"stroke": {"color": "#a0a0a0", "thickness": 1}}
-            edge["selected"] = {"stroke": {"color": "#a0a0a0", "thickness": 1}}
-        link = result['link']
+        edge = {"from": homepage_id, "to": i,}
         edges.append(edge)
     return Response(dumps({"nodes": nodes, "edges": edges}),
                     mimetype="application/json")
@@ -507,69 +273,210 @@ def get_any_nodes():
 
 @app.route("/json/vis/pages.json")
 def get_vis_pages():
+    def pages(tx):
+        result = tx.run("MATCH (n:Page {page:1}) "
+            "RETURN COUNT(n) AS total")
+        limit = min(int(result.single()['total'] / 2), 200)
+        limit = 10000
+        return list(tx.run("MATCH (p:Page {page: 1}) "
+            "WHERE p.backlinks >0 "
+            "RETURN p "
+            "ORDER BY p.backlinks DESC LIMIT $limit",
+            {"limit": limit}))
+    def page_links(tx):
+        result = tx.run("MATCH (n:Page {page:1})-[l]->(m:Page {page:1}) "
+            "RETURN COUNT(l) AS total")
+        limit = min(int(result.single()['total'] / 10), 1000)
+        limit = 10000
+        return list(tx.run("MATCH (p:Page {page: 1})-[l]->"
+            "(q :Page {page: 1}) "
+            "WHERE p.url <> q.url AND (q)<--(p) "
+            "RETURN p.url AS from, q.url AS to, l.weight AS weight "
+            "ORDER BY l.weight DESC LIMIT $limit",
+            {"limit": limit}))
     def clusters(tx):
         return list(tx.run("MATCH (c: Cluster) "
             "RETURN c"))
-    def pages(tx):
-        return list(tx.run("MATCH (p:Page {page: 1}) "
-            "RETURN p"))
     def cluster_links(tx):
         return list(tx.run("MATCH (p:Page {page: 1})-[r]->"
             "(c: Cluster) RETURN p, r, c"))
     db = get_db()
-    #{ id: 1, label: "Node 1" }
     i = 0
     cluster_id = {}
     node_id = {}
     diag_id = {}
     nodes = []
     edges = []
+    inserted_edges = []
     hompage = ''
     results = db.execute_read(pages)
     for result in results:
         page = result['p']
         url = page.get("url")
-        group = page.get("group")
+        errors = page.get("errors", 0)
+        warnings = page.get("warnings", 0)
+        group = 'ok'
+        if warnings > 2:
+            group = 'warning'
+        if errors > 2:
+            group = 'error'
         if page.get('homePage') and page['homePage'] == 1:
             homepage = url
         node_id[url] = i
         label = urlparse(url).path[:32]
+        label = ''
         node = {"id": i, "url": url, "group": group,
-                "label": label, "value": page.get("size", 0),}
+                "errors": errors, "warnings": warnings,
+                "label": label, "value": page.get("mass", 1),}
                # "mass": page.get("mass", 1)}
         if page.get("screenshot"):
             node["screenshot_url"] = page["screenshot"]
         nodes.append(node)
         i += 1
+    results = db.execute_read(page_links)
+    for result in results:
+        from_page = node_id.get(result['from'])
+        to_page = node_id.get(result['to'])
+       #if not from_page or not to_page:
+       #    continue
+        weight = result['weight']
+        other_dir = (to_page, from_page) #skip bi direction links
+        if other_dir in inserted_edges:
+            continue
+        inserted_edges.append((from_page, to_page))
+        edge = {"from": from_page, "to": to_page,
+                "weight": weight, "physics": "false"}
+        edges.append(edge)
     results = db.execute_read(clusters)
     for result in results:
         label = result['c']['label']
-        node = {"id": i, "label": label, 'group': 'cluster', }
+        node = {"id": i, "label": label, 'group': 'cluster',
+            }
         nodes.append(node)
         cluster_id[label] = i
         i += 1
     results = db.execute_read(cluster_links)
     for result in results:
-        page = result['p']
-        cluster = result['c']
-        edge = {"from": node_id[page["url"]],
-                "to": cluster_id[cluster["label"]]}
+        from_page = node_id.get(result['p']['url'])
+        to_cluster = cluster_id.get(result['c']['label'])
+       #if not from_page or not to_cluster:
+       #    continue
+        edge = {"from": from_page, "to": to_cluster,
+                "length": 1, "hidden": "true"}
         edges.append(edge)
-    #link clusters
-    prev_url = first_url = ''
-    for url in cluster_id:
-        if prev_url:
-            edge = {"from": cluster_id[url],
-                    "to": cluster_id[prev_url],}
-                 #   "length": 99}
-            edges.append(edge)
-        else:
-            first_url = url
-        prev_url = url
-    else:
-        edge = {"from": cluster_id[first_url],
-                "to": cluster_id[url],
-                "length": 99}
+#   #link clusters
+#   prev_url = first_url = ''
+#   for url in cluster_id:
+#       if prev_url:
+#           edge = {"from": cluster_id[url],
+#                   "to": cluster_id[prev_url],
+#                   "hidden": "true"}
+#           edges.append(edge)
+#       else:
+#           first_url = url
+#       prev_url = url
+#   else:
+#       edge = {"from": cluster_id[first_url],
+#               "to": cluster_id[url],
+#               "hidden": "true"}
+#       edges.append(edge)
+    return Response(dumps({"nodes": nodes, "edges": edges}),
+                    mimetype="application/json")
+
+
+@app.route("/json/vis/pages/<distance>")
+def get_vis_pages_distance(distance):
+    def pages(tx, distance):
+       #result = tx.run("MATCH (n:Page {homePage:1}) "
+       #    "RETURN n.url AS url")
+       #homepage = result.single()['url']
+       ##XXX unoptimized
+        return list(tx.run(
+            "MATCH (n:Page {homePage:1}) RETURN n AS page "
+            "UNION "
+            "MATCH z=((n:Page {homePage:1})-[l:LINK_TO*..3]->"
+            "(p:Page {page:1})) "
+            "WHERE n<>p AND length(z)<=$distance "
+            "RETURN DISTINCT(p) AS page ",
+            {"distance": distance}))
+    def page_links(tx):
+        result = tx.run("MATCH (n:Page {page:1})-[l]->(m:Page {page:1}) "
+            "RETURN COUNT(l) AS total")
+        limit = min(int(result.single()['total'] / 10), 1000)
+        limit = 10000
+        return list(tx.run("MATCH (p:Page {page: 1})-[l]->"
+            "(q :Page {page: 1}) "
+            "WHERE p.url <> q.url AND (q)<--(p) "
+            "RETURN p.url AS from, q.url AS to, l.weight AS weight "
+            "ORDER BY l.weight DESC LIMIT $limit",
+            {"limit": limit}))
+    def clusters(tx):
+        return list(tx.run("MATCH (c: Cluster) "
+            "RETURN c"))
+    def cluster_links(tx):
+        return list(tx.run("MATCH (p:Page {page: 1})-[r]->"
+            "(c: Cluster) RETURN p, r, c"))
+    distance = int(distance)
+    db = get_db()
+    i = 0
+    cluster_id = {}
+    node_id = {}
+    diag_id = {}
+    nodes = []
+    edges = []
+    inserted_edges = []
+    hompage = ''
+    results = db.execute_read(pages, distance)
+    for result in results:
+        page = result['page']
+        url = page.get("url")
+        errors = page.get("errors", 0)
+        warnings = page.get("warnings", 0)
+        group = 'ok'
+        if warnings > 2:
+            group = 'warning'
+        if errors > 2:
+            group = 'error'
+        if page.get('homePage') and page['homePage'] == 1:
+            homepage = url
+        node_id[url] = i
+        label = urlparse(url).path[:32]
+        label = ''
+        node = {"id": i, "url": url, "group": group,
+                "errors": errors, "warnings": warnings,
+                "label": label, "value": page.get("mass", 1),}
+        if page.get("screenshot"):
+            node["screenshot_url"] = page["screenshot"]
+        nodes.append(node)
+        i += 1
+    results = db.execute_read(page_links)
+    for result in results:
+        from_page = node_id.get(result['from'])
+        to_page = node_id.get(result['to'])
+        weight = result['weight']
+        other_dir = (to_page, from_page) #skip bi direction links
+        if other_dir in inserted_edges:
+            continue
+        inserted_edges.append((from_page, to_page))
+        edge = {"from": from_page, "to": to_page,
+                "weight": weight, "physics": "false"}
+        edges.append(edge)
+    results = db.execute_read(clusters)
+    for result in results:
+        label = result['c']['label']
+        node = {"id": i, "label": label, 'group': 'cluster',
+            }
+        nodes.append(node)
+        cluster_id[label] = i
+        i += 1
+    results = db.execute_read(cluster_links)
+    for result in results:
+        from_page = node_id.get(result['p']['url'])
+        to_cluster = cluster_id.get(result['c']['label'])
+       #if not from_page or not to_cluster:
+       #    continue
+        edge = {"from": from_page, "to": to_cluster,
+                "length": 1, "hidden": "true"}
         edges.append(edge)
     return Response(dumps({"nodes": nodes, "edges": edges}),
                     mimetype="application/json")
@@ -579,6 +486,13 @@ def get_vis_pages():
 @app.route('/vis/')
 def vis_simple():
     return render_template('vis/test1.html',
+                           url = NEO4J_URL,
+                           username=username, password=password)
+
+#vis charts
+@app.route('/vis/2')
+def vis_test2():
+    return render_template('vis/test2.html',
                            url = NEO4J_URL,
                            username=username, password=password)
 

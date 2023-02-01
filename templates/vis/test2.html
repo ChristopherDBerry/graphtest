@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Network | Basic Usage | Standalone Build</title>
+
+    <style type="text/css">
+      html,
+      body,
+      #mynetwork {
+        margin: 0px;
+        padding: 0px;
+      }
+
+      #mynetwork {
+        position: fixed;
+        left: 0px;
+        top: 0px;
+        bottom: 0px;
+        right: 50%;
+        min-height: 100vh;
+        border-right: 1px solid lightgray;
+        background: white;
+      }
+
+      #text {
+        position: absolute;
+        left: 50%;
+        padding: 1em;
+      }
+
+      #title {
+        margin-bottom: 5em;
+      }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js" integrity="sha512-XHDcSyqhOoO2ocB7sKOCJEkUjw/pQCJViP1ynpy+EGh/LggzrP6U/V3a++LQTnZT7sCQKeHRyWHfhN2afjXjCg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/3.6.2/fetch.min.js" integrity="sha512-1Gn7//DzfuF67BGkg97Oc6jPN6hqxuZXnaTpC9P5uw8C6W4yUNj5hoS/APga4g1nO2X6USBb/rXtGzADdaVDeA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  </head>
+
+  <body>
+    <div id="text">
+    </div>
+
+    <div id="mynetwork"></div>
+    <script type="text/javascript">
+fetch('/json/vis/hierarchy.json')
+  .then((response) => response.json())
+  .then((data) => redrawMain(data.nodes, data.edges));
+
+function redrawMain(nodes, edges) {
+  console.log(data)
+  var nodes = new vis.DataSet(nodes)
+  // create a network
+  var container = document.getElementById("mynetwork")
+  var data = {
+    nodes: nodes,
+    edges: edges,
+  }
+  var options = {
+    layout: {
+      hierarchical: {
+        direction: 'UD',
+      },
+    },
+    interaction:{
+      //dragNodes: false
+    },
+    nodes: {
+      shape: 'dot',
+      scaling: {
+        label: {
+          enabled: true,
+          min: 8,
+          max: 8,
+        }
+      },
+    },
+    edges: {
+//      smooth: false
+    },
+  }
+  var network = new vis.Network(container, data, options)
+}
+
+    </script>
+  </body>
+</html>
