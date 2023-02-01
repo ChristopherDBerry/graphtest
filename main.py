@@ -271,126 +271,9 @@ def get_vis_hierarchy():
                     mimetype="application/json")
 
 
-@app.route("/json/vis/pages.json")
-def get_vis_pages():
-    def pages(tx):
-        result = tx.run("MATCH (n:Page {page:1}) "
-            "RETURN COUNT(n) AS total")
-        limit = min(int(result.single()['total'] / 2), 200)
-        limit = 10000
-        return list(tx.run("MATCH (p:Page {page: 1}) "
-            "WHERE p.backlinks >0 "
-            "RETURN p "
-            "ORDER BY p.backlinks DESC LIMIT $limit",
-            {"limit": limit}))
-    def page_links(tx):
-        result = tx.run("MATCH (n:Page {page:1})-[l]->(m:Page {page:1}) "
-            "RETURN COUNT(l) AS total")
-        limit = min(int(result.single()['total'] / 10), 1000)
-        limit = 10000
-        return list(tx.run("MATCH (p:Page {page: 1})-[l]->"
-            "(q :Page {page: 1}) "
-            "WHERE p.url <> q.url AND (q)<--(p) "
-            "RETURN p.url AS from, q.url AS to, l.weight AS weight "
-            "ORDER BY l.weight DESC LIMIT $limit",
-            {"limit": limit}))
-    def clusters(tx):
-        return list(tx.run("MATCH (c: Cluster) "
-            "RETURN c"))
-    def cluster_links(tx):
-        return list(tx.run("MATCH (p:Page {page: 1})-[r]->"
-            "(c: Cluster) RETURN p, r, c"))
-    db = get_db()
-    i = 0
-    cluster_id = {}
-    node_id = {}
-    diag_id = {}
-    nodes = []
-    edges = []
-    inserted_edges = []
-    hompage = ''
-    results = db.execute_read(pages)
-    for result in results:
-        page = result['p']
-        url = page.get("url")
-        errors = page.get("errors", 0)
-        warnings = page.get("warnings", 0)
-        group = 'ok'
-        if warnings > 2:
-            group = 'warning'
-        if errors > 2:
-            group = 'error'
-        if page.get('homePage') and page['homePage'] == 1:
-            homepage = url
-        node_id[url] = i
-        label = urlparse(url).path[:32]
-        label = ''
-        node = {"id": i, "url": url, "group": group,
-                "errors": errors, "warnings": warnings,
-                "label": label, "value": page.get("mass", 1),}
-               # "mass": page.get("mass", 1)}
-        if page.get("screenshot"):
-            node["screenshot_url"] = page["screenshot"]
-        nodes.append(node)
-        i += 1
-    results = db.execute_read(page_links)
-    for result in results:
-        from_page = node_id.get(result['from'])
-        to_page = node_id.get(result['to'])
-       #if not from_page or not to_page:
-       #    continue
-        weight = result['weight']
-        other_dir = (to_page, from_page) #skip bi direction links
-        if other_dir in inserted_edges:
-            continue
-        inserted_edges.append((from_page, to_page))
-        edge = {"from": from_page, "to": to_page,
-                "weight": weight, "physics": "false"}
-        edges.append(edge)
-    results = db.execute_read(clusters)
-    for result in results:
-        label = result['c']['label']
-        node = {"id": i, "label": label, 'group': 'cluster',
-            }
-        nodes.append(node)
-        cluster_id[label] = i
-        i += 1
-    results = db.execute_read(cluster_links)
-    for result in results:
-        from_page = node_id.get(result['p']['url'])
-        to_cluster = cluster_id.get(result['c']['label'])
-       #if not from_page or not to_cluster:
-       #    continue
-        edge = {"from": from_page, "to": to_cluster,
-                "length": 1, "hidden": "true"}
-        edges.append(edge)
-#   #link clusters
-#   prev_url = first_url = ''
-#   for url in cluster_id:
-#       if prev_url:
-#           edge = {"from": cluster_id[url],
-#                   "to": cluster_id[prev_url],
-#                   "hidden": "true"}
-#           edges.append(edge)
-#       else:
-#           first_url = url
-#       prev_url = url
-#   else:
-#       edge = {"from": cluster_id[first_url],
-#               "to": cluster_id[url],
-#               "hidden": "true"}
-#       edges.append(edge)
-    return Response(dumps({"nodes": nodes, "edges": edges}),
-                    mimetype="application/json")
-
-
 @app.route("/json/vis/pages/<distance>")
 def get_vis_pages_distance(distance):
     def pages(tx, distance):
-       #result = tx.run("MATCH (n:Page {homePage:1}) "
-       #    "RETURN n.url AS url")
-       #homepage = result.single()['url']
-       ##XXX unoptimized
         return list(tx.run(
             "MATCH (n:Page {homePage:1}) RETURN n AS page "
             "UNION "
@@ -420,6 +303,7 @@ def get_vis_pages_distance(distance):
     db = get_db()
     i = 0
     cluster_id = {}
+    cluster_nodes = {}
     node_id = {}
     diag_id = {}
     nodes = []
@@ -443,6 +327,8 @@ def get_vis_pages_distance(distance):
         label = urlparse(url).path[:32]
         label = ''
         node = {"id": i, "url": url, "group": group,
+                'title': 'URL: %s, errors: %s, warnings: %s' % (
+                url, errors, warnings),
                 "errors": errors, "warnings": warnings,
                 "label": label, "value": page.get("mass", 1),}
         if page.get("screenshot"):
@@ -464,20 +350,25 @@ def get_vis_pages_distance(distance):
     results = db.execute_read(clusters)
     for result in results:
         label = result['c']['label']
-        node = {"id": i, "label": label, 'group': 'cluster',
-            }
-        nodes.append(node)
+        node = {"id": i, "label": label, 'group': 'cluster', 'links': 0}
         cluster_id[label] = i
+        cluster_nodes[label] = node
         i += 1
     results = db.execute_read(cluster_links)
     for result in results:
+        cluster_label = result['c']['label']
         from_page = node_id.get(result['p']['url'])
-        to_cluster = cluster_id.get(result['c']['label'])
-       #if not from_page or not to_cluster:
-       #    continue
+        to_cluster = cluster_id.get(cluster_label)
+        if not from_page or not to_cluster:
+            continue
+        cluster_nodes[cluster_label]['links'] += 1
         edge = {"from": from_page, "to": to_cluster,
                 "length": 1, "hidden": "true"}
         edges.append(edge)
+    for label in cluster_nodes:
+        node = cluster_nodes[label]
+        if node['links']:
+            nodes.append(node)
     return Response(dumps({"nodes": nodes, "edges": edges}),
                     mimetype="application/json")
 
