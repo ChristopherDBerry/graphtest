@@ -8,6 +8,7 @@
       html,
       body,
       #mynetwork {
+        font-family: Arial;
         margin: 0px;
         padding: 0px;
       }
@@ -38,7 +39,7 @@
   <body>
     <div id="text">
       <label for="distance">Distance from homepage:</label>
-      <select name="distance" id="distance">
+      <select style="display:none;" name="distance" id="distance">
         <option value="1" selected="selected">1</option>
         <option value="2">2</option>
         <option value="3">3</option>
@@ -50,6 +51,8 @@
 
 var NODES = new vis.DataSet([])
 var EDGES = new vis.DataSet([])
+
+var DISTANCE = {}
 
 var container = document.getElementById("mynetwork")
 var options = {
@@ -69,7 +72,6 @@ var options = {
   nodes: {
     color: {
       hover: {
-        background: 'black',
         border: 'black',
       },
       border: '#EEEEEE',
@@ -122,26 +124,38 @@ var data = {
 }
 var network = new vis.Network(container, data, options)
 
-function redrawMain(nodes, edges) {
+function redrawMain(distance, nodes, edges) {
   NODES.clear()
   EDGES.clear()
-  NODES.add(nodes)
-  EDGES.add(edges)
+  NODES.add(DISTANCE[distance].nodes)
+  EDGES.add(DISTANCE[distance].edges)
   network.stabilize()
+  forceStop()
+}
+
+function forceStop() {
+  setTimeout(function () {
+    network.stopSimulation()
+  }, 2.0 * 1000)
 }
 
 $(function() {
 
 $("#distance").change(function() {
   var distance = $(this).val()
-  var url = '/json/vis/pages/' + distance
-  var jqxhr = $.get(url, function(data) {
-    redrawMain(data.nodes, data.edges)
-  })
+  redrawMain(distance, data.nodes, data.edges)
 })
 
-var jqxhr = $.get('/json/vis/pages/1', function(data) {
-  redrawMain(data.nodes, data.edges)
+$.get('/json/vis/pages/1', function(data) {
+  DISTANCE['1'] = {nodes: data.nodes, edges: data.edges}
+  redrawMain('1', data.nodes, data.edges)
+  $.get('/json/vis/pages/2', function(data) {
+    DISTANCE['2'] = {nodes: data.nodes, edges: data.edges}
+    $.get('/json/vis/pages/3', function(data) {
+      DISTANCE['3'] = {nodes: data.nodes, edges: data.edges}
+      $("#distance").show()
+    })
+  })
 })
 
 })
