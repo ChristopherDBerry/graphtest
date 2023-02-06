@@ -339,6 +339,8 @@ def get_vis_pages_distance(distance):
     for result in results:
         from_page = node_id.get(result['from'])
         to_page = node_id.get(result['to'])
+        if from_page is None or to_page is None:
+            continue
         weight = result['weight']
         other_dir = (to_page, from_page) #skip bi direction links
         if other_dir in inserted_edges:
@@ -359,7 +361,7 @@ def get_vis_pages_distance(distance):
         cluster_label = result['c']['label']
         from_page = node_id.get(result['p']['url'])
         to_cluster = cluster_id.get(cluster_label)
-        if not from_page or not to_cluster:
+        if from_page is None or to_page is None:
             continue
         cluster_nodes[cluster_label]['links'] += 1
         edge = {"from": from_page, "to": to_cluster,
