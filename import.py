@@ -34,6 +34,7 @@ class Importer:
         self.data_nodes = []
         self.data_paths = {}
         self.data_links = {}
+        self.data_diags = {}
         self.driver = GraphDatabase.driver(url, auth=(user, password))
 
     def close(self):
@@ -58,46 +59,98 @@ class Importer:
                ).consume()
 
     @staticmethod
-    def pages(tx, _data):
-        tx.run(
-            "WITH $data AS value "
-            "UNWIND value AS item "
-            "MERGE (p:Page {url: item.url}) "
-            "SET p.screenshot = item.screenshot.storage, "
-            "p.contentTested = item.contentTested,"
-            "p.mimeType = item.mimeType, "
-            "p.page = item.page, p.path = item.path, "
-            "p.backlinks = 0, p.size = 1, p.mass = 1, "
-            "p.homePage = item.homePage ",
-            {"data": _data}
-        ).consume()
+    def pages(tx, _data, set_size=250):
+        cql = ("WITH $data AS value "
+                "UNWIND value AS item "
+                "MERGE (p:Page {url: item.url}) "
+                "SET p.screenshot = item.screenshot.storage, "
+                "p.contentTested = item.contentTested,"
+                "p.mimeType = item.mimeType, "
+                "p.page = item.page, p.path = item.path, "
+                "p.backlinks = 0, p.size = 1, p.mass = 1, "
+                "p.group = 'ok', "
+                "p.homePage = item.homePage ")
+        data_subset = []
+        for (n, row) in enumerate(_data, 1):
+            data_subset.append(row)
+            if n % set_size == 0:
+                tx.run(cql, {"data": data_subset}).consume()
+                data_subset = []
+                log.warning("%d pages" % n)
+        else:
+            tx.run(cql, {"data": data_subset}).consume()
+            log.warning("%d pages" % n)
 
     @staticmethod
-    def links(tx, _data):
-        tx.run(
-            "WITH $data AS value "
+    def links(tx, _data, set_size=250):
+        cql = ("WITH $data AS value "
             "UNWIND value AS item "
             "MATCH (f:Page {url: item.from}), "
             "(t:Page {url: item.to}) "
-            "MERGE (f)-[lt:LINK_TO {weight: item.weight}]->(t)",
-            {"data": _data}
-        ).consume()
+            "MERGE (f)-[lt:LINK_TO {weight: item.weight}]->(t)")
+        data_subset = []
+        for (n, row) in enumerate(_data.keys(), 1):
+            data_subset.append({'from': row[0], 'to': row[1],
+                    'weight': _data[row]})
+            if n % set_size == 0:
+                tx.run(cql, {"data": data_subset}).consume()
+                data_subset = []
+                log.warning("%d links" % n)
+        else:
+            tx.run(cql, {"data": data_subset}).consume()
+            log.warning("%d links" % n)
 
     @staticmethod
-    def diags(tx, _data):
-        tx.run(
-            "WITH $data AS value "
+    def diags(tx, _data, set_size=250):
+        cql = ("WITH $data AS value "
             "UNWIND value AS item "
-            "MATCH (p:Page {url: item.url}) "
-            "WITH p, item.diagnostics AS diags "
-            "UNWIND [x in diags] AS diag "
+            "MATCH (p :Page {url: item.url})"
             "MERGE (d:Diag "
-                "{category: diag.category, "
-                "name: diag.name, "
-                "level: diag.level, "
-                "message: diag.message}) "
-            "MERGE (p) -[:HAS_DIAG]-> (d)",
-            {"data": _data}
+                "{category: item.category, "
+                "name: item.name, "
+                "level: item.level, "
+                "message: item.message}) "
+            "MERGE (p) -[:HAS_DIAG]-> (d)")
+        n = 1
+        data_subset = []
+        for url in _data.keys():
+            for diag in _data[url]:
+                data_subset.append(diag)
+                if n % set_size == 0:
+                    tx.run(cql, {"data": data_subset}).consume()
+                    data_subset = []
+                    log.warning("%d diags" % n)
+                n += 1
+        else:
+            tx.run(cql, {"data": data_subset}).consume()
+            log.warning("%d diags" % n)
+#        tx.run(
+#            "WITH $data AS value "
+#            "UNWIND value AS item "
+#            "MATCH (p:Page {url: item.url}) "
+#            "WITH p, item.diagnostics AS diags "
+#            "UNWIND [x in diags] AS diag "
+#            "MERGE (d:Diag "
+#                "{category: diag.category, "
+#                "name: diag.name, "
+#                "level: diag.level, "
+#                "message: diag.message}) "
+#            "MERGE (p) -[:HAS_DIAG]-> (d)",
+#            {"data": _data}
+#        ).consume()
+
+    @staticmethod
+    def set_diag_totals(tx):
+        tx.run(
+            "MATCH (n:Page {page:1})-->(d:Diag) "
+            "WHERE d.level <> 'serious' "
+            "WITH n, count(d) AS warning "
+            "SET n.warnings = warning "
+        ).consume()
+        tx.run(
+            "MATCH (n:Page {page:1})-->(d:Diag {level: 'serious'}) "
+            "WITH n, count(d) AS error "
+            "SET n.errors = error "
         ).consume()
 
     @staticmethod
@@ -108,14 +161,31 @@ class Importer:
             "WITH count(b) AS backlinks, n, e, m "
             "WHERE (n)<--(m) AND n<>m "
             "SET n.backlinks = backlinks "
-            "SET n.size=n.backlinks^1.3 "
-            "SET n.mass=n.backlinks^0.9 "
+            "SET n.size=n.backlinks^1.2 "
+            "SET n.mass=n.backlinks^0.1 "
         ).consume()
         #add weights to backlinks
         tx.run(
             "MATCH (n:Page {page:1})-[l]->(m:Page {page:1}) "
             "SET l.weight=n.backlinks"
         ).consume()
+
+    @staticmethod
+    def section_cluster_urls(tx): #alt algo, ignore weight
+        section = {}
+        result = tx.run("MATCH (n:Page {page:1}) RETURN n.url AS url")
+        for page in list(result):
+            url_parts = urlparse(page['url'])
+            path = url_parts.path.split('/')[:2][-1]
+            host = url_parts.scheme + '://' + url_parts.netloc
+            section.setdefault(host, {})
+            section[host][path] = 1
+        cluster_urls = []
+        for host in section:
+            for page in section[host]:
+                    cluster_urls.append(host + "/" + page)
+        cluster_urls.sort(key = lambda x:-len(x))
+        return cluster_urls
 
     @staticmethod
     def get_cluster_urls(tx):
@@ -135,7 +205,10 @@ class Importer:
       """Sort cluster_node urls by shortest, 'most different' first"""
       result = tx.run("MATCH (n:Page {page:1}) "
             "RETURN COUNT(n) AS total")
-      limit = int(result.single()['total'] / 20)
+      limit = int(result.single()['total'] / 5)
+      result = tx.run("MATCH (n:Page {homePage:1}) "
+            "RETURN n.url AS url")
+      homepage = result.single()['url']
       presorted = [[], ]
       for url in cluster_node_urls:
         position = 0
@@ -156,7 +229,13 @@ class Importer:
           for _, url in urls:
               sorted_urls.append(url)
               if len(sorted_urls) >= limit:
-                  return sorted_urls
+                  break
+          if len(sorted_urls) >= limit:
+              break
+      sorted_urls.reverse()
+      if homepage not in sorted_urls:
+          sorted_urls.append(homepage)
+      #sorted_urls.append('') #default cluster for unclustered pages
       return sorted_urls
 
     @staticmethod
@@ -167,8 +246,8 @@ class Importer:
             "ORDER BY label_len DESC "
             "MATCH (p:Page {page:1}) "
             "WHERE left(p.url, label_len)=c.label AND NOT (p)-->(:Cluster) "
-            "MERGE (p)-[r:IN_CLUSTER]->(c) "
-            "SET p.group=c.label ",
+            "MERGE (p)-[r:IN_CLUSTER]->(c) ",
+            #"SET p.group=c.label ",
             {"url": _url}
         ).consume()
 
@@ -220,6 +299,16 @@ class Importer:
                 if url in self.data_pages and link in self.data_pages:
                     self.data_links[(url, link)
                         ] = self.data_links.setdefault((url, link), 0) + 1
+            self.data_diags[url] = []
+            for diag in row.get("diagnostics", []):
+                message = diag.get('message', '').format(**diag.get('parameters', {})) or ''
+                self.data_diags[url].append({
+                    'url': url,
+                    'message': message,
+                    'category': diag['category'],
+                    'name': diag['name'],
+                    'level': diag['level']
+                })
 
     def run(self, did):
         log.warning("Process Dexter")
@@ -229,35 +318,19 @@ class Importer:
             session.execute_write(self.drop_data)
             session.execute_write(self.drop_constraints)
             session.execute_write(self.init_db)
-            SET_SIZE = 250 # Limit large data sets
-            data_subset = []
-            for (n, row) in enumerate(self.data_nodes, 1):
-                data_subset.append(row)
-                if n % SET_SIZE == 0:
-                    session.execute_write(self.pages, data_subset)
-                    data_subset = []
-                    log.warning("%d pages" % n)
-            else:
-                session.execute_write(self.pages, data_subset)
-                log.warning("%d pages" % n)
-            data_subset = []
-            for (n, row) in enumerate(self.data_links.keys(), 1):
-                data_subset.append({'from': row[0], 'to': row[1],
-                    'weight': self.data_links[row]})
-                if n % SET_SIZE == 0:
-                    session.execute_write(self.links, data_subset)
-                    data_subset = []
-                    log.warning("%d links" % n)
-            else:
-                session.execute_write(self.links, data_subset)
-                log.warning("%d links" % n)
+            session.execute_write(self.pages, self.data_nodes)
+            session.execute_write(self.links, self.data_links)
+            session.execute_write(self.diags, self.data_diags)
             log.warning("setting backlinks")
             session.execute_write(self.set_backlinks)
+            log.warning("setting totals")
+            session.execute_write(self.set_diag_totals)
             log.warning("building clusters")
-            cluster_urls = session.execute_read(self.get_cluster_urls)
-            cluster_urls = session.execute_read(self.sort_cluster_urls, cluster_urls)
-            cluster_urls.reverse()
+            cluster_urls = session.execute_write(self.section_cluster_urls)
+            #cluster_urls = session.execute_read(self.get_cluster_urls)
+            #cluster_urls = session.execute_read(self.sort_cluster_urls, cluster_urls)
             for url in cluster_urls:
+                log.warning("Setting cluster " + url)
                 session.execute_write(self.create_cluster_node, url)
 
 
