@@ -109,6 +109,8 @@ class Importer:
                 "{category: item.category, "
                 "name: item.name, "
                 "level: item.level, "
+                "techniques: item.techniques, "
+                "level: 'green', "
                 "message: item.message}) "
             "MERGE (p) -[:HAS_DIAG]-> (d)")
         n = 1
@@ -124,33 +126,33 @@ class Importer:
         else:
             tx.run(cql, {"data": data_subset}).consume()
             log.warning("%d diags" % n)
-#        tx.run(
-#            "WITH $data AS value "
-#            "UNWIND value AS item "
-#            "MATCH (p:Page {url: item.url}) "
-#            "WITH p, item.diagnostics AS diags "
-#            "UNWIND [x in diags] AS diag "
-#            "MERGE (d:Diag "
-#                "{category: diag.category, "
-#                "name: diag.name, "
-#                "level: diag.level, "
-#                "message: diag.message}) "
-#            "MERGE (p) -[:HAS_DIAG]-> (d)",
-#            {"data": _data}
-#        ).consume()
 
     @staticmethod
     def set_diag_totals(tx):
+        #content editor - refine
+        #[img] missing alt F65, [form] missing label [H44], [links] missing G91, repeated
+        #['F65', 'H44', 'F84']
+        #top 10
+        #[u'F2', u'F41', u'F40', u'F89', u'F17', u'H64', u'H25', u'F65', u'F30', u'H44']
+        #levels: ce [red], top10 [amber], access [yellow], others [green]
         tx.run(
-            "MATCH (n:Page {page:1})-->(d:Diag) "
-            "WHERE d.level <> 'serious' "
-            "WITH n, count(d) AS warning "
-            "SET n.warnings = warning "
+            "MATCH (n:Page {page:1})-->(d:Diag {category:'accessibility'}) "
+            "SET n.level = 'yellow'"
         ).consume()
         tx.run(
-            "MATCH (n:Page {page:1})-->(d:Diag {level: 'serious'}) "
-            "WITH n, count(d) AS error "
-            "SET n.errors = error "
+            "MATCH (n:Page {page:1})-->(d:Diag {category:'accessibility'}) "
+            "WHERE 'F2' IN d.techniques OR 'F41' IN d.techniques OR "
+                "'F40' IN d.techniques OR 'F89' IN d.techniques OR "
+                "'F17' IN d.techniques OR 'H64' IN d.techniques OR "
+                "'H25' IN d.techniques OR 'F65' IN d.techniques OR "
+                "'F30' IN d.techniques OR 'H44' IN d.techniques "
+            "SET n.level = 'amber'"
+        ).consume()
+        tx.run(
+            "MATCH (n:Page {page:1})-->(d:Diag {category:'accessibility'}) "
+            "WHERE 'F65' IN d.techniques OR "
+                "'H44' IN d.techniques OR 'F84' IN d.techniques "
+            "SET n.level = 'red'"
         ).consume()
 
     @staticmethod
@@ -247,7 +249,6 @@ class Importer:
             "MATCH (p:Page {page:1}) "
             "WHERE left(p.url, label_len)=c.label AND NOT (p)-->(:Cluster) "
             "MERGE (p)-[r:IN_CLUSTER]->(c) ",
-            #"SET p.group=c.label ",
             {"url": _url}
         ).consume()
 
@@ -302,12 +303,14 @@ class Importer:
             self.data_diags[url] = []
             for diag in row.get("diagnostics", []):
                 message = diag.get('message', '').format(**diag.get('parameters', {})) or ''
+                techs = diag.get('parameters', {}).get('wcag', {}).get('techniques', [])
                 self.data_diags[url].append({
                     'url': url,
                     'message': message,
                     'category': diag['category'],
                     'name': diag['name'],
-                    'level': diag['level']
+                    'level': diag['level'],
+                    'techniques': techs,
                 })
 
     def run(self, did):
