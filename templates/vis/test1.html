@@ -29,6 +29,12 @@
         padding: 1em;
       }
 
+      #mynetwork div.vis-tooltip {
+        color: #000000;
+        background-color: #ffffff;
+        background: white;
+      }
+
     </style>
 
     <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
@@ -53,6 +59,25 @@ var NODES = new vis.DataSet([])
 var EDGES = new vis.DataSet([])
 
 var DISTANCE = {}
+
+function htmlTitle(url, screenshot_url) {
+  if (screenshot_url) {
+      var html = "<div style='text-align: center; background-color: white; width:100%;height:100%;'>" +
+        "<div style='width:120px;height:120px; overflow:hidden;'>" +
+          "<img src='" + screenshot_url +
+          "' style='width:120px;'> " +
+        "</div>" +
+        "<p>" + url + "</p>" +
+      "</div>"
+  } else {
+      var html = "<div style='text-align: center; background-color: white; width:100%;height:100%;'>" +
+        "<p>" + url + "</p>" +
+      "</div>"
+  }
+  const container = document.createElement("div");
+  container.innerHTML = html;
+  return container;
+}
 
 var container = document.getElementById("mynetwork")
 var options = {
@@ -79,19 +104,22 @@ var options = {
     borderWidth: 1,
     shape: 'dot',
     scaling: {
-      min: 7,
-      max: 11,
-      label: {
-        enabled: false,
-        min: 8,
-        max: 8,
-      }
+      min: 6,
+      max: 12,
     },
   },
   edges: {
+    dashes: true,
     smooth: false,
     color: {
       color: '#E1E1E1',
+    },
+    chosen: {
+      edge: function(values, id, selected, hovering) {
+        values.dashes = false;
+        values.width = 0.25;
+        values.color = '#444444';
+      },
     },
   },
   groups: {
@@ -112,8 +140,28 @@ var options = {
       }
     },
     cluster: {
-      font: '66px arial black',
+      value: 1,
+      font: '32px arial black',
       shape: 'box',
+      scaling: {
+        min: 32,
+        max: 32,
+          label: {
+            enabled: true,
+            min: 32,
+            max: 32,
+            maxVisible: 32,
+            drawThreshold: 5,
+          },
+      },
+      color: {
+        background: 'white',
+      },
+      chosen: {
+        node: function(values, id, selected, hovering) {
+          values.color = '#F1F1F1';
+        },
+      },
     }
   }
 }
@@ -123,6 +171,7 @@ var data = {
   edges: EDGES,
 }
 var network = new vis.Network(container, data, options)
+network.on('startStabilizing', forceStop);
 
 function redrawMain(distance, nodes, edges) {
   NODES.clear()
@@ -147,12 +196,24 @@ $("#distance").change(function() {
 })
 
 $.get('/json/vis/pages/1', function(data) {
+  for (var node of data.nodes) {
+    if (node.url)
+      node.title = htmlTitle(node.url, node.screenshot_url)
+  }
   DISTANCE['1'] = {nodes: data.nodes, edges: data.edges}
   redrawMain('1', data.nodes, data.edges)
   $.get('/json/vis/pages/2', function(data) {
     DISTANCE['2'] = {nodes: data.nodes, edges: data.edges}
+    for (var node of data.nodes) {
+      if (node.url)
+        node.title = htmlTitle(node.url, node.screenshot_url)
+    }
     $.get('/json/vis/pages/3', function(data) {
       DISTANCE['3'] = {nodes: data.nodes, edges: data.edges}
+      for (var node of data.nodes) {
+        if (node.url)
+          node.title = htmlTitle(node.url, node.screenshot_url)
+      }
       $("#distance").show()
     })
   })

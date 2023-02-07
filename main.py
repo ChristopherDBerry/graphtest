@@ -327,8 +327,6 @@ def get_vis_pages_distance(distance):
         label = urlparse(url).path[:32]
         label = ''
         node = {"id": i, "url": url, "group": group,
-                'title': 'URL: %s, errors: %s, warnings: %s' % (
-                url, errors, warnings),
                 "errors": errors, "warnings": warnings,
                 "label": label, "value": page.get("mass", 1),}
         if page.get("screenshot"):
