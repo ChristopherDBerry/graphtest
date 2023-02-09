@@ -4,61 +4,170 @@
     <meta charset="utf-8" />
     <title>Dexter graph</title>
 
-    <style type="text/css">
-      html,
-      body,
-      #mynetwork {
-        font-family: Arial;
-        margin: 0px;
-        padding: 0px;
-      }
-      #mynetwork {
-        position: fixed;
-        left: 0px;
-        top: 0px;
-        bottom: 0px;
-        right: 10%;
-        min-height: 100vh;
-        border-right: 1px solid lightgray;
-        background: white;
-      }
-
-      #text {
-        position: absolute;
-        left: 90%;
-        padding: 1em;
-      }
-
-      #mynetwork div.vis-tooltip {
-        color: #000000;
-        background-color: #ffffff;
-        background: white;
-      }
-
-    </style>
-
     <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
     <script src="/static/script/vis-network.js"></script>
+    <link href="/static/css/vis.css" rel="stylesheet">
 
   </head>
 
-  <body>
-    <div id="text">
-      <label for="distance">Distance from homepage:</label>
-      <select style="display:none;" name="distance" id="distance">
-        <option value="1" selected="selected">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-      </select>
+<body>
+
+<div id="text">
+  <label for="distance">Distance from homepage:</label>
+  <select style="display:none;" name="distance" id="distance">
+    <option value="1" selected="selected">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+  </select>
+  <p>Show pages to action: Red, Amber, Yellow, Green</p>
+  <div id="red-button" class="pseudo-button"></div>
+  <div id="amber-button" class="pseudo-button"></div>
+  <div id="yellow-button" class="pseudo-button"></div>
+  <div id="green-button" class="pseudo-button"></div>
+  <p>Show pages to action by user:</p>
+  <div style='display:inline-block;'>
+    <div class="user-icon">CB</div>
+  </div>
+  <div style='display:inline-block;'>
+    <div class="user-icon">JR</div>
+  </div>
+  <div style='display:inline-block;'>
+    <div class="user-icon">LS</div>
+  </div>
+  <div style='display:inline-block;'>
+    <div class="user-icon">MC</div>
+  </div>
+  <br><br>
+  <br><br>
+  <br><br>
+  <br><br>
+  <br><br>
+  <br><br>
+  <p style='margin-top: auto;'>Display:</p>
+  <div style='display:flex; width: 90%; align-items: center; justify-content: flex-start;'>
+      &nbsp; Static &nbsp;
+    <label class="switch">
+      <input id='display' type="checkbox" checked>
+      <span class="slider"></span>
+    </label>
+      &nbsp; Dynamic
+  </div>
+  <br><br>
+</div>
+
+<div id="mynetwork-container">
+  <div id="mynetwork"></div>
+  <div id="staticnetwork" style='display:none;'>
+
+    <div class="screenbg">
+      <span class="screencontents" style="background-image:url('https://dxtfs.com/4933720e1c534050065450d35daeeac2235b602ebc8b412623033bee70518333(image,png)');" ></span>
     </div>
 
-    <div id="mynetwork"></div>
+    <div class='dexter-total-section'>
+      <h2 class="dexter-total-main-heading">https://www.udemy.com/</h2>
+      <h2 class="dexter-total-heading"><abbr title='Web Content Accessibility Guidelines'>WCAG</abbr> diagnostics totals</h2>
+      <p class="dexter-subtitle"><abbr title='Web Content Accessibility Guidelines'>WCAG</abbr> 2 covers a wide range of recommendations for making Web content more accessible to people with disabilities.</p>
+
+        <span class='dexter-total-label'>Level A:</span>
+        <span class='dexter-total-result fail'>FAIL (6 techniques, 62 failures)</span>
+        <span class='dexter-total-label'>Level AA:</span>
+        <span class='dexter-total-result fail'>FAIL (1 techniques, 3 failures)</span>
+        <br><br>
+
+        <h2 class="dexter-total-heading">axe diagnostics</h2>
+        <p class="dexter-subtitle">The accessibility rules engine 'axe-core' from deque labs is used by developers and accessibility experts to ensure alignment with accessibility guidelines.</p>
+        <span class='dexter-total-label'>axe totals:</span>
+        <span class='dexter-total-result fail'>FAIL (6 techniques, 62 failures)</span>
+        <br><br>
+
+        <h2 class="dexter-total-heading">Content editorial standards</h2>
+        <p class="dexter-subtitle">This is the foundation of accessibility training for your content editors.</p>
+        <span class='dexter-total-label'><abbr title="Content Editor">CE</abbr> totals:</span>
+        <span class='dexter-total-result fail'>FAIL (6 techniques, 62 failures)</span>
+        <br><br>
+
+    </div>
+        <br><br>
+    <hr>
+        <br><br>
+
+    <div class="screenbg">
+      <span class="screencontents" style="background-image:url('https://dxtfs.com/4933720e1c534050065450d35daeeac2235b602ebc8b412623033bee70518333(image,png)');" ></span>
+    </div>
+
+    <div class='dexter-total-section'>
+      <h2 class="dexter-total-main-heading">https://www.udemy.com/about-us</h2>
+      <h2 class="dexter-total-heading"><abbr title='Web Content Accessibility Guidelines'>WCAG</abbr> diagnostics totals</h2>
+      <p class="dexter-subtitle"><abbr title='Web Content Accessibility Guidelines'>WCAG</abbr> 2 covers a wide range of recommendations for making Web content more accessible to people with disabilities.</p>
+
+        <span class='dexter-total-label'>Level A:</span>
+        <span class='dexter-total-result fail'>FAIL (6 techniques, 62 failures)</span>
+        <span class='dexter-total-label'>Level AA:</span>
+        <span class='dexter-total-result fail'>FAIL (1 techniques, 3 failures)</span>
+        <br><br>
+
+        <h2 class="dexter-total-heading">axe diagnostics</h2>
+        <p class="dexter-subtitle">The accessibility rules engine 'axe-core' from deque labs is used by developers and accessibility experts to ensure alignment with accessibility guidelines.</p>
+        <span class='dexter-total-label'>axe totals:</span>
+        <span class='dexter-total-result fail'>FAIL (6 techniques, 62 failures)</span>
+        <br><br>
+
+        <h2 class="dexter-total-heading">Content editorial standards</h2>
+        <p class="dexter-subtitle">This is the foundation of accessibility training for your content editors.</p>
+        <span class='dexter-total-label'><abbr title="Content Editor">CE</abbr> totals:</span>
+        <span class='dexter-total-result fail'>FAIL (6 techniques, 62 failures)</span>
+        <br><br>
+
+    </div>
+        <br><br>
+    <hr>
+        <br><br>
+
+    <div class="screenbg">
+      <span class="screencontents" style="background-image:url('https://dxtfs.com/4933720e1c534050065450d35daeeac2235b602ebc8b412623033bee70518333(image,png)');" ></span>
+    </div>
+
+    <div class='dexter-total-section'>
+      <h2 class="dexter-total-main-heading">https://www.udemy.com/resources/</h2>
+      <h2 class="dexter-total-heading"><abbr title='Web Content Accessibility Guidelines'>WCAG</abbr> diagnostics totals</h2>
+      <p class="dexter-subtitle"><abbr title='Web Content Accessibility Guidelines'>WCAG</abbr> 2 covers a wide range of recommendations for making Web content more accessible to people with disabilities.</p>
+
+        <span class='dexter-total-label'>Level A:</span>
+        <span class='dexter-total-result fail'>FAIL (6 techniques, 62 failures)</span>
+        <span class='dexter-total-label'>Level AA:</span>
+        <span class='dexter-total-result fail'>FAIL (1 techniques, 3 failures)</span>
+        <br><br>
+
+        <h2 class="dexter-total-heading">axe diagnostics</h2>
+        <p class="dexter-subtitle">The accessibility rules engine 'axe-core' from deque labs is used by developers and accessibility experts to ensure alignment with accessibility guidelines.</p>
+        <span class='dexter-total-label'>axe totals:</span>
+        <span class='dexter-total-result fail'>FAIL (6 techniques, 62 failures)</span>
+        <br><br>
+
+        <h2 class="dexter-total-heading">Content editorial standards</h2>
+        <p class="dexter-subtitle">This is the foundation of accessibility training for your content editors.</p>
+        <span class='dexter-total-label'><abbr title="Content Editor">CE</abbr> totals:</span>
+        <span class='dexter-total-result fail'>FAIL (6 techniques, 62 failures)</span>
+        <br><br>
+
+    </div>
+        <br><br>
+    <hr>
+        <br><br>
+
+  </div>
+</div>
     <script type="text/javascript">
 
 var NODES = new vis.DataSet([])
 var EDGES = new vis.DataSet([])
 
-var DISTANCE = {}
+var DISTANCE = {
+  'red': {nodes: []}, 'amber': {nodes:[]}, 'yellow': {nodes:[]}, 'green': {nodes:[]}
+}
+var PRIORITY = {
+  'red': {nodes: []}, 'amber': {nodes:[]}, 'yellow': {nodes:[]}, 'green': {nodes:[]}
+}
 
 function htmlTitle(url, screenshot_url) {
   if (screenshot_url) {
@@ -67,12 +176,9 @@ function htmlTitle(url, screenshot_url) {
           "<img src='" + screenshot_url +
           "' style='width:120px;'> " +
         "</div>" +
-        "<p>" + url + "</p>" +
       "</div>"
   } else {
-      var html = "<div style='text-align: center; background-color: white; width:100%;height:100%;'>" +
-        "<p>" + url + "</p>" +
-      "</div>"
+    return ''
   }
   const container = document.createElement("div");
   container.innerHTML = html;
@@ -123,17 +229,22 @@ var options = {
     },
   },
   groups: {
-    ok: {
+    green: {
       color: {
         background: 'green',
       }
     },
-    warning: {
+    amber: {
       color: {
         background: 'orange',
       }
     },
-    error: {
+    yellow: {
+      color: {
+        background: 'yellow',
+      }
+    },
+    red: {
       label: '',
       color: {
         background: 'red',
@@ -141,15 +252,15 @@ var options = {
     },
     cluster: {
       value: 1,
-      font: '32px arial black',
+      font: '20px arial black',
       shape: 'box',
       scaling: {
-        min: 32,
-        max: 32,
+        min: 20,
+        max: 24,
           label: {
             enabled: true,
-            min: 32,
-            max: 32,
+            min: 20,
+            max: 24,
             maxVisible: 32,
             drawThreshold: 5,
           },
@@ -173,11 +284,11 @@ var data = {
 var network = new vis.Network(container, data, options)
 network.on('startStabilizing', forceStop);
 
-function redrawMain(distance, nodes, edges) {
+function redrawMain(id) {
   NODES.clear()
   EDGES.clear()
-  NODES.add(DISTANCE[distance].nodes)
-  EDGES.add(DISTANCE[distance].edges)
+  NODES.add(DISTANCE[id].nodes)
+  EDGES.add(DISTANCE[id].edges)
   network.stabilize()
   forceStop()
 }
@@ -186,6 +297,27 @@ function forceStop() {
   setTimeout(function () {
     network.stopSimulation()
   }, 2.0 * 1000)
+}
+
+function buildNodes() {
+  var nodes = DISTANCE[3].nodes
+  for (var i in nodes) {
+    var node = nodes[i]
+    if (node.group in {'red':1, 'amber':1, 'yellow':1, 'green':1}) {
+      DISTANCE[node.group].nodes.push(node)
+    }
+    if (node.group === 'cluster') {
+      DISTANCE['red'].nodes.push(node)
+      DISTANCE['amber'].nodes.push(node)
+      DISTANCE['yellow'].nodes.push(node)
+      DISTANCE['green'].nodes.push(node)
+    }
+  }
+  DISTANCE['red'].edges = DISTANCE[3].edges
+  DISTANCE['amber'].edges = DISTANCE[3].edges
+  DISTANCE['yellow'].edges = DISTANCE[3].edges
+  DISTANCE['green'].edges = DISTANCE[3].edges
+  console.log(PRIORITY)
 }
 
 $(function() {
@@ -201,7 +333,7 @@ $.get('/json/vis/pages/1', function(data) {
       node.title = htmlTitle(node.url, node.screenshot_url)
   }
   DISTANCE['1'] = {nodes: data.nodes, edges: data.edges}
-  redrawMain('1', data.nodes, data.edges)
+  redrawMain('1')
   $.get('/json/vis/pages/2', function(data) {
     DISTANCE['2'] = {nodes: data.nodes, edges: data.edges}
     for (var node of data.nodes) {
@@ -215,12 +347,34 @@ $.get('/json/vis/pages/1', function(data) {
           node.title = htmlTitle(node.url, node.screenshot_url)
       }
       $("#distance").show()
+      buildNodes()
     })
   })
 })
 
+$("#red-button").click(function() {
+  redrawMain('red')
+})
+$("#amber-button").click(function() {
+  redrawMain('amber')
+})
+$("#yellow-button").click(function() {
+  redrawMain('yellow')
+})
+$("#green-button").click(function() {
+  redrawMain('green')
+})
+
+$('#display').change(function() {
+    $('#mynetwork').toggle()
+    $('#staticnetwork').toggle()
+    if (this.checked) {
+    } else {
+    }
+});
+
 })
 
     </script>
-  </body>
+</body>
 </html>

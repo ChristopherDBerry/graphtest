@@ -314,20 +314,12 @@ def get_vis_pages_distance(distance):
     for result in results:
         page = result['page']
         url = page.get("url")
-        errors = page.get("errors", 0)
-        warnings = page.get("warnings", 0)
-        group = 'ok'
-        if warnings > 2:
-            group = 'warning'
-        if errors > 2:
-            group = 'error'
         if page.get('homePage') and page['homePage'] == 1:
             homepage = url
         node_id[url] = i
         label = urlparse(url).path[:32]
         label = ''
-        node = {"id": i, "url": url, "group": group,
-                "errors": errors, "warnings": warnings,
+        node = {"id": i, "url": url, "group": page['level'],
                 "label": label, "value": page.get("mass", 1),}
         if page.get("screenshot"):
             node["screenshot_url"] = page["screenshot"]

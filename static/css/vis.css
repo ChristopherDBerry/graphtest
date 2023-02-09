@@ -1,0 +1,204 @@
+html,
+body,
+#mynetwork {
+  font-family: Arial;
+  margin: 0px;
+  padding: 0px;
+}
+#mynetwork-container {
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  bottom: 0px;
+  right: 25%;
+  min-height: 100vh;
+  border-right: 1px solid lightgray;
+  background: white;
+}
+#mynetwork {
+  height: 100%;
+  width: 100%;
+}
+
+#text {
+  position: absolute;
+  left: 75%;
+  padding: 1em;
+}
+
+#mynetwork div.vis-tooltip {
+  color: #000000;
+  background-color: #ffffff;
+  background: white;
+}
+
+.user-icon,
+.pseudo-button {
+  display: inline-block;
+  height: 22px;
+  width:22px;
+  cursor: pointer;
+  margin-left: 22px;
+}
+.user-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height:36px;
+  width:36px;
+  border-radius: 50%;
+  background-color: #165470;
+  text-align: center;
+  color: white;
+  font-size: 22px;
+}
+
+#red-button {
+  border: 4px solid red;
+}
+
+#amber-button {
+  border: 4px solid orange;
+}
+
+#yellow-button {
+  border: 4px solid yellow;
+}
+
+#green-button {
+  border: 4px solid green;
+}
+
+/****************************
+Static results
+****************************/
+
+#staticnetwork {
+  padding: 18px;
+  height:100vh;
+  outline: 1px solid pink;
+  color: #273D78;
+  overflow-y: auto;
+}
+
+#staticnetwork hr{
+  width: 88%;
+}
+
+.dexter-total-section {
+  width: 500px;
+}
+
+.dexter-total-main-heading {
+  font-size: 19px;
+  font-weight: bold;
+}
+
+.dexter-total-heading {
+  font-size: 17px;
+  font-weight: bold;
+}
+
+.dexter-subtitle {
+  font-size: 14px;
+  white-space: initial;
+  color: #273D78;
+}
+
+.dexter-total-section .pass {
+  color: #33cd99;
+}
+
+.dexter-total-section .fail {
+  color: #ee736d;
+}
+
+.dexter-total-label {
+  font-weight: bold;
+  display:inline-block; width:140px;
+}
+.dexter-total-result {
+  display:inline-block; width:300px;
+}
+
+.screenbg{
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+  background: no-repeat url(/static/images/screen_outline.svg);
+  background-size: cover;
+  width: 354px;
+  height: 268px;
+  float: right;
+  margin-top:64px;
+  margin-right:64px;
+}
+
+.screenbg .screencontents {
+  width: 344px;
+  height: 222px;
+  background-size: cover;
+  position: absolute;
+  top: 4px;
+  left: 6px;
+}
+
+/****************************
+Generic slider
+****************************/
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+
+/****************************
+End slider
+****************************/
