@@ -127,6 +127,13 @@ class Importer:
             tx.run(cql, {"data": data_subset}).consume()
             log.warning("%d diags" % n)
 
+
+    @staticmethod
+    def get_pages(tx):
+        result = tx.run("MATCH (n:Page {page:1}) RETURN n")
+        return list(result)
+
+
     @staticmethod
     def set_diag_totals(tx):
         #content editor - refine
@@ -156,6 +163,25 @@ class Importer:
         ).consume()
 
     @staticmethod
+    def set_distance(tx, _page):
+        """ set shortest distance to homepage for all nodes """
+        tx.run(
+            "MATCH (p:Page {url: $url}) "
+            "WITH p "
+            "MATCH z=((hp:Page {homePage:1})-[l:LINK_TO*..3]->(p)) "
+            "WHERE length(z)<=3 "
+            "WITH p, length(z) AS len ORDER BY len limit 1 "
+            "SET p.distance = len",
+            {"url": _page['url']}
+        ).consume()
+        #add weights to backlinks
+        tx.run(
+            "MATCH (n:Page {homePage:1}) "
+            "SET n.distance = 0"
+        ).consume()
+
+
+    @staticmethod
     def set_backlinks(tx):
         tx.run(
             "MATCH (n:Page {page:1})-[e]->(m:Page {page:1}), "
@@ -165,11 +191,6 @@ class Importer:
             "SET n.backlinks = backlinks "
             "SET n.size=n.backlinks^1.2 "
             "SET n.mass=n.backlinks^0.1 "
-        ).consume()
-        #add weights to backlinks
-        tx.run(
-            "MATCH (n:Page {page:1})-[l]->(m:Page {page:1}) "
-            "SET l.weight=n.backlinks"
         ).consume()
 
     @staticmethod
@@ -251,6 +272,11 @@ class Importer:
             "MERGE (p)-[r:IN_CLUSTER]->(c) ",
             {"url": _url}
         ).consume()
+        tx.run(
+            "MATCH (p:Page {page:1, url:$url}), (c:Cluster {label: $url}) "
+            "SET c.screenshot_url = p.screenshot_url ",
+            {"url": _url}
+        ).consume()
 
     def process_dexter(self, did):
         """Process dexter results to be more neo4j-able"""
@@ -328,10 +354,12 @@ class Importer:
             session.execute_write(self.set_backlinks)
             log.warning("setting totals")
             session.execute_write(self.set_diag_totals)
+            log.warning("setting distances")
+            pages = session.execute_write(self.get_pages)
+            for page in pages:
+                session.execute_write(self.set_distance, page['n'])
             log.warning("building clusters")
             cluster_urls = session.execute_write(self.section_cluster_urls)
-            #cluster_urls = session.execute_read(self.get_cluster_urls)
-            #cluster_urls = session.execute_read(self.sort_cluster_urls, cluster_urls)
             for url in cluster_urls:
                 log.warning("Setting cluster " + url)
                 session.execute_write(self.create_cluster_node, url)
