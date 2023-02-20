@@ -4,162 +4,105 @@
     <meta charset="utf-8" />
     <title>Dexter graph</title>
 
-    <style type="text/css">
-      html,
-      body,
-      #mynetwork {
-        font-family: Arial;
-        margin: 0px;
-        padding: 0px;
-      }
-      #mynetwork {
-        position: fixed;
-        left: 0px;
-        top: 0px;
-        bottom: 0px;
-        right: 10%;
-        min-height: 100vh;
-        border-right: 1px solid lightgray;
-        background: white;
-      }
-
-      #text {
-        position: absolute;
-        left: 90%;
-        padding: 1em;
-      }
-
-    </style>
-
     <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
     <script src="/static/script/vis-network.js"></script>
+    <link href="/static/css/vis.css" rel="stylesheet">
 
   </head>
 
-  <body>
-    <div id="text">
-      <label for="distance">Distance from homepage:</label>
-      <select style="display:none;" name="distance" id="distance">
-        <option value="1" selected="selected">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-      </select>
-    </div>
+<body>
 
-    <div id="mynetwork"></div>
-    <script type="text/javascript">
+<div class="grey-fw-banner">
+  <h1>Sitemorse Results</h1>
+  <div class='graph-display' data-value='dynamic'>Switch to static view</div>
+</div>
 
-var NODES = new vis.DataSet([])
-var EDGES = new vis.DataSet([])
+<div id="text" class='text-fat'>
 
-var DISTANCE = {}
+<div id='chart-loading'>
+  <h2>Loading nodes <span class="loader"></span></h2>
+</div>
 
-var container = document.getElementById("mynetwork")
-var options = {
-  physics: {
-      stabilization: {
-          enabled: true,
-          iterations: 125, // maximum number of iteration to stabilize
-          updateInterval: 10,
-          onlyDynamicEdges: false,
-          fit: true
-      },
-  },
-  interaction:{
-    hover: true,
-    tooltipDelay: 30,
-  },
-  nodes: {
-    color: {
-      hover: {
-        border: 'black',
-      },
-      border: '#EEEEEE',
-    },
-    borderWidth: 1,
-    shape: 'dot',
-    scaling: {
-      min: 7,
-      max: 11,
-      label: {
-        enabled: false,
-        min: 8,
-        max: 8,
-      }
-    },
-  },
-  edges: {
-    smooth: false,
-    color: {
-      color: '#E1E1E1',
-    },
-  },
-  groups: {
-    ok: {
-      color: {
-        background: 'green',
-      }
-    },
-    warning: {
-      color: {
-        background: 'orange',
-      }
-    },
-    error: {
-      label: '',
-      color: {
-        background: 'red',
-      }
-    },
-    cluster: {
-      font: '66px arial black',
-      shape: 'box',
-    }
-  }
-}
+<div class='expand-horizontal' style='display: none;'>
+  &gt;
+</div>
+<div id='settings-header' style='display: none;'>
+  <div class='settings-icon settings-med'></div>
+  <h2>Settings</h2>
+</div>
 
-var data = {
-  nodes: NODES,
-  edges: EDGES,
-}
-var network = new vis.Network(container, data, options)
+<div id='chart-controls' style='display: none;'>
+  <p>Distance from homepage:</p>
+  <div style='display:inline-block;'>
+    <div id='distance1' class="distance-icon distance-switch"  data-value='0'>1</div>
+  </div>
+  <div style='display:inline-block;'>
+    <div id='distance2' class="distance-icon distance-switch" data-value='0'>2</div>
+  </div>
+  <div style='display:inline-block;'>
+    <div id='distance3' class="distance-icon distance-switch distance-switch-selected" data-value='1'>3</div>
+  </div>
+  <p>Show pages to action:</p>
+  <div class="pseudo-toggle red-button" data-value='1'></div>
+  <div class="pseudo-toggle amber-button" data-value='1'></div>
+  <div class="pseudo-toggle yellow-button" data-value='1'></div>
+  <div class="pseudo-toggle green-button" data-value='1'></div>
+  <p>Show pages to action by user:</p>
+  <div style='display:inline-block;'>
+    <div class="user-icon">CB</div>
+  </div>
+  <div style='display:inline-block;'>
+    <div class="user-icon">JR</div>
+  </div>
+  <div style='display:inline-block;'>
+    <div class="user-icon">LS</div>
+  </div>
+  <div style='display:inline-block;'>
+    <div class="user-icon">MC</div>
+  </div>
+  <br><br>
+</div><!--/chart-controls-->
+</div>
 
-function redrawMain(distance, nodes, edges) {
-  NODES.clear()
-  EDGES.clear()
-  NODES.add(DISTANCE[distance].nodes)
-  EDGES.add(DISTANCE[distance].edges)
-  network.stabilize()
-  forceStop()
-}
+<div id="mynetwork-container">
+  <div id="mynetwork"></div>
+  <div id="staticnetwork" style='display:none;'>
 
-function forceStop() {
-  setTimeout(function () {
-    network.stopSimulation()
-  }, 2.0 * 1000)
-}
+      <h2 class="dexter-total-heading"><abbr title='Web Content Accessibility Guidelines'>WCAG</abbr> diagnostics totals</h2>
+      <p class="dexter-subtitle"><abbr title="Web Content Accessibility Guidelines">WCAG</abbr> 2 covers a wide range of recommendations for making Web content more accessible to people with disabilities, and following them and will often make your content more usable to users in general.</p>
 
-$(function() {
+      <table class='static-results-table'>
+        <thead>
+          <tr>
+            <th scope="col"></th> <!--Icon -->
+            <th scope="col">Page title (click to open page)</th>
+            <th scope="col">Accessibility actions</th>
+            <th scope="col">axe diagnostics</th>
+            <th scope="col">Content editorial</th>
+            <th scope="col">Page corrected, recheck</th>
+          </tr>
+          <tr>
+            <th scope="col"></th>
+            <th scope="col"></th>
+            <th scope="col">WCAG A | AA</th>
+            <th scope="col" colspan="3"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>O</td>
+            <td>Page title</td>
+            <td>Level A: FAIL (6 techniques, 53 failures)<br>
+                Level AA: FAIL (3 techniques, 22 failures)</td>
+            <td>FAIL (6 techniques, 53 failures)</td>
+            <td>FAIL (4 issues)</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
 
-$("#distance").change(function() {
-  var distance = $(this).val()
-  redrawMain(distance, data.nodes, data.edges)
-})
-
-$.get('/json/vis/pages/1', function(data) {
-  DISTANCE['1'] = {nodes: data.nodes, edges: data.edges}
-  redrawMain('1', data.nodes, data.edges)
-  $.get('/json/vis/pages/2', function(data) {
-    DISTANCE['2'] = {nodes: data.nodes, edges: data.edges}
-    $.get('/json/vis/pages/3', function(data) {
-      DISTANCE['3'] = {nodes: data.nodes, edges: data.edges}
-      $("#distance").show()
-    })
-  })
-})
-
-})
-
-    </script>
-  </body>
+  </div>
+</div>
+<script src="/static/js/vis.js"></script>
+</body>
 </html>
