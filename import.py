@@ -69,6 +69,7 @@ class Importer:
                 "p.page = item.page, p.path = item.path, "
                 "p.backlinks = 0, p.size = 1, p.mass = 1, "
                 "p.group = 'ok', "
+                "p.yellow_diags = 0, p.amber_diags = 0, p.red_diags = 0, "
                 "p.homePage = item.homePage ")
         data_subset = []
         for (n, row) in enumerate(_data, 1):
@@ -109,8 +110,8 @@ class Importer:
                 "{category: item.category, "
                 "name: item.name, "
                 "level: item.level, "
+                "module: item.module, "
                 "techniques: item.techniques, "
-                "level: 'green', "
                 "message: item.message}) "
             "MERGE (p) -[:HAS_DIAG]-> (d)")
         n = 1
@@ -144,7 +145,23 @@ class Importer:
         #levels: ce [red], top10 [amber], access [yellow], others [green]
         tx.run(
             "MATCH (n:Page {page:1})-->(d:Diag {category:'accessibility'}) "
-            "SET n.level = 'yellow'"
+            "WITH n, COUNT(d) AS diags "
+            "SET n.level = 'yellow', n.yellow_diags = diags"
+        ).consume()
+        tx.run(
+            "MATCH (n:Page {page:1})-->(d:Diag {module:'axe'}) "
+            "WITH n, COUNT(d) AS diags "
+            "SET n.axe_diags = diags"
+        ).consume()
+        tx.run(
+            "MATCH (n:Page {page:1})-->(d:Diag {level:'A'}) "
+            "WITH n, COUNT(d) AS diags "
+            "SET n.a_diags = diags"
+        ).consume()
+        tx.run(
+            "MATCH (n:Page {page:1})-->(d:Diag {level:'AA'}) "
+            "WITH n, COUNT(d) AS diags "
+            "SET n.aa_diags = diags"
         ).consume()
         tx.run(
             "MATCH (n:Page {page:1})-->(d:Diag {category:'accessibility'}) "
@@ -153,13 +170,15 @@ class Importer:
                 "'F17' IN d.techniques OR 'H64' IN d.techniques OR "
                 "'H25' IN d.techniques OR 'F65' IN d.techniques OR "
                 "'F30' IN d.techniques OR 'H44' IN d.techniques "
-            "SET n.level = 'amber'"
+                "WITH n, COUNT(d) AS diags "
+            "SET n.level = 'amber', n.amber_diags = diags"
         ).consume()
         tx.run(
             "MATCH (n:Page {page:1})-->(d:Diag {category:'accessibility'}) "
             "WHERE 'F65' IN d.techniques OR "
                 "'H44' IN d.techniques OR 'F84' IN d.techniques "
-            "SET n.level = 'red'"
+            "WITH n, COUNT(d) AS diags "
+            "SET n.level = 'red', n.red_diags = diags"
         ).consume()
 
     @staticmethod
@@ -330,13 +349,17 @@ class Importer:
             for diag in row.get("diagnostics", []):
                 message = diag.get('message', '').format(**diag.get('parameters', {})) or ''
                 techs = diag.get('parameters', {}).get('wcag', {}).get('techniques', [])
+                level = diag.get('parameters', {}).get('wcag', {}).get('level', '')
                 self.data_diags[url].append({
                     'url': url,
                     'message': message,
                     'category': diag['category'],
+                    'module': diag['module'],
                     'name': diag['name'],
-                    'level': diag['level'],
+                    #'level': diag['level'],
+                    'level': level,
                     'techniques': techs,
+
                 })
 
     def run(self, did):
