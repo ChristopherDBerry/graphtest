@@ -23,44 +23,86 @@
   <h2>Loading nodes <span class="loader"></span></h2>
 </div>
 
-<div class='expand-horizontal' style='display: none;'>
-  &gt;
+<div class='expand-horizontal-icon expand-horizontal' style='display: none;'>
 </div>
-<div id='settings-header' style='display: none;'>
+<div id='settings-header' class='expand-horizontal' style='display: none; cursor:pointer;'>
   <div class='settings-icon settings-med'></div>
-  <h2>Settings</h2>
+  <h2>&nbsp;Settings</h2>
 </div>
 
 <div id='chart-controls' style='display: none;'>
-  <p>Distance from homepage:</p>
-  <div style='display:inline-block;'>
-    <div id='distance1' class="distance-icon distance-switch"  data-value='0'>1</div>
+  <div class='chart-controls-section'>
+    <p style='margin-top:100px;'>Distance from homepage:</p>
+    <div style='display:inline-block;'>
+      <div id='distance1' class="distance-icon distance-switch"  data-value='0'>1</div>
+    </div>
+    <div style='display:inline-block;'>
+      <div id='distance2' class="distance-icon distance-switch" data-value='0'>2</div>
+    </div>
+    <div style='display:inline-block;'>
+      <div id='distance3' class="distance-icon distance-switch distance-switch-selected" data-value='1'>3</div>
+    </div>
   </div>
-  <div style='display:inline-block;'>
-    <div id='distance2' class="distance-icon distance-switch" data-value='0'>2</div>
+  <div class='chart-controls-section'>
+    <p>Show pages to action:</p>
+    <div style='display:inline-block;'>
+      <div class="pseudo-toggle red-button" data-value='1'></div>
+    </div>
+    <div style='display:inline-block;'>
+      <div class="pseudo-toggle amber-button" data-value='1'></div>
+    </div>
+    <div style='display:inline-block;'>
+      <div class="pseudo-toggle yellow-button" data-value='1'></div>
+    </div>
+    <div style='display:inline-block;'>
+      <div class="pseudo-toggle green-button" data-value='1'></div>
+    </div>
   </div>
-  <div style='display:inline-block;'>
-    <div id='distance3' class="distance-icon distance-switch distance-switch-selected" data-value='1'>3</div>
+  <div class='chart-controls-section'>
+    <p>Show pages to action by user:</p>
+    <div style='display:inline-block;'>
+      <div class="user-icon">CB</div>
+    </div>
+    <div style='display:inline-block;'>
+      <div class="user-icon">JR</div>
+    </div>
+    <div style='display:inline-block;'>
+      <div class="user-icon">LS</div>
+    </div>
+    <div style='display:inline-block;'>
+      <div class="user-icon">MC</div>
+    </div>
   </div>
-  <p>Show pages to action:</p>
-  <div class="pseudo-toggle red-button" data-value='1'></div>
-  <div class="pseudo-toggle amber-button" data-value='1'></div>
-  <div class="pseudo-toggle yellow-button" data-value='1'></div>
-  <div class="pseudo-toggle green-button" data-value='1'></div>
-  <p>Show pages to action by user:</p>
-  <div style='display:inline-block;'>
-    <div class="user-icon">CB</div>
+  <div class='chart-controls-section'>
+    <p>Show pages to action by category:</p>
+    <div style='display:inline-block;'>
+      <div class="category-icon category-accessibility"></div>
+    </div>
+    <div style='display:inline-block;'>
+      <div class="category-icon category-links"></div>
+    </div>
+    <div style='display:inline-block;'>
+      <div class="category-icon category-code"></div>
+    </div>
+    <div style='display:inline-block;'>
+      <div class="category-icon category-seo"></div>
+    </div>
+    <div style='display:inline-block;'>
+      <div class="category-icon category-email"></div>
+    </div>
+    <div style='display:inline-block;'>
+      <div class="category-icon category-privacy"></div>
+    </div>
+    <div style='display:inline-block;'>
+      <div class="category-icon category-performance"></div>
+    </div>
+    <div style='display:inline-block;'>
+      <div class="category-icon category-spelling"></div>
+    </div>
+    <div style='display:inline-block;'>
+      <div class="category-icon category-brand"></div>
+    </div>
   </div>
-  <div style='display:inline-block;'>
-    <div class="user-icon">JR</div>
-  </div>
-  <div style='display:inline-block;'>
-    <div class="user-icon">LS</div>
-  </div>
-  <div style='display:inline-block;'>
-    <div class="user-icon">MC</div>
-  </div>
-  <br><br>
 </div><!--/chart-controls-->
 </div>
 
