@@ -113,7 +113,9 @@ class Importer:
                 "module: item.module, "
                 "techniques: item.techniques, "
                 "message: item.message}) "
-            "MERGE (p) -[:HAS_DIAG]-> (d)")
+            "MERGE (p) -[hd:HAS_DIAG]-> (d) "
+                "ON CREATE SET hd.count = 1 "
+                "ON MATCH SET hd.count = hd.count + 1 ")
         n = 1
         data_subset = []
         for url in _data.keys():
@@ -144,41 +146,41 @@ class Importer:
         #[u'F2', u'F41', u'F40', u'F89', u'F17', u'H64', u'H25', u'F65', u'F30', u'H44']
         #levels: ce [red], top10 [amber], access [yellow], others [green]
         tx.run(
-            "MATCH (n:Page {page:1})-->(d:Diag {category:'accessibility'}) "
-            "WITH n, COUNT(d) AS diags "
-            "SET n.level = 'yellow', n.yellow_diags = diags"
+            "MATCH (n:Page {page:1})-[hd]->(d:Diag {category:'accessibility'}) "
+            "WITH n, COUNT(d) AS techs, SUM(hd.count) AS diags "
+            "SET n.level = 'yellow', n.yellow_techs = techs, n.yellow_diags = diags"
         ).consume()
         tx.run(
-            "MATCH (n:Page {page:1})-->(d:Diag {module:'axe'}) "
-            "WITH n, COUNT(d) AS diags "
-            "SET n.axe_diags = diags"
+            "MATCH (n:Page {page:1})-[hd]->(d:Diag {module:'axe'}) "
+            "WITH n, COUNT(d) AS techs, SUM(hd.count) AS diags "
+            "SET n.axe_techs = techs, n.axe_diags = diags"
         ).consume()
         tx.run(
-            "MATCH (n:Page {page:1})-->(d:Diag {level:'A'}) "
-            "WITH n, COUNT(d) AS diags "
-            "SET n.a_diags = diags"
+            "MATCH (n:Page {page:1})-[hd]->(d:Diag {level:'A'}) "
+            "WITH n, COUNT(d) AS techs, SUM(hd.count) AS diags "
+            "SET n.a_techs = techs, n.a_diags = diags"
         ).consume()
         tx.run(
-            "MATCH (n:Page {page:1})-->(d:Diag {level:'AA'}) "
-            "WITH n, COUNT(d) AS diags "
-            "SET n.aa_diags = diags"
+            "MATCH (n:Page {page:1})-[hd]->(d:Diag {level:'AA'}) "
+            "WITH n, COUNT(d) AS techs, SUM(hd.count) AS diags "
+            "SET n.aa_techs = techs, n.aa_diags = diags"
         ).consume()
         tx.run(
-            "MATCH (n:Page {page:1})-->(d:Diag {category:'accessibility'}) "
+            "MATCH (n:Page {page:1})-[hd]->(d:Diag {category:'accessibility'}) "
             "WHERE 'F2' IN d.techniques OR 'F41' IN d.techniques OR "
                 "'F40' IN d.techniques OR 'F89' IN d.techniques OR "
                 "'F17' IN d.techniques OR 'H64' IN d.techniques OR "
                 "'H25' IN d.techniques OR 'F65' IN d.techniques OR "
                 "'F30' IN d.techniques OR 'H44' IN d.techniques "
-                "WITH n, COUNT(d) AS diags "
-            "SET n.level = 'amber', n.amber_diags = diags"
+                "WITH n, COUNT(d) AS techs, SUM(hd.count) AS diags "
+            "SET n.level = 'amber', n.amber_techs = techs, n.amber_diags = diags"
         ).consume()
         tx.run(
-            "MATCH (n:Page {page:1})-->(d:Diag {category:'accessibility'}) "
+            "MATCH (n:Page {page:1})-[hd]->(d:Diag {category:'accessibility'}) "
             "WHERE 'F65' IN d.techniques OR "
                 "'H44' IN d.techniques OR 'F84' IN d.techniques "
-            "WITH n, COUNT(d) AS diags "
-            "SET n.level = 'red', n.red_diags = diags"
+            "WITH n, COUNT(d) AS techs, SUM(hd.count) AS diags "
+            "SET n.level = 'red', n.red_techs = techs, n.red_diags = diags"
         ).consume()
 
     @staticmethod
