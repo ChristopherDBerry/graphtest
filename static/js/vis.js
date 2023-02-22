@@ -193,14 +193,14 @@ $(".expand-horizontal").click(function() {
     $('#text').removeClass('text-fat')
     $('#text').addClass('text-thin')
     $('#settings-header h2').hide()
-    $('#chart-controls').hide()
-    $(".expand-horizontal").html('&lt;')
+    $('#chart-controls p').hide()
+    $(".expand-horizontal-icon").addClass('contract-horizontal-icon')
   } else {
     $('#text').removeClass('text-thin')
     $('#text').addClass('text-fat')
     $('#settings-header h2').show()
-    $('#chart-controls').show()
-    $(".expand-horizontal").html('&gt;')
+    $('#chart-controls p').show()
+    $(".expand-horizontal-icon").removeClass('contract-horizontal-icon')
   }
 })
 
@@ -217,7 +217,7 @@ $.get('/json/vis/all', function(data) {
   console.log(ALL_ELEMENTS)
   redrawMain()
   $("#chart-loading").hide()
-  $(".expand-horizontal").show()
+  $(".expand-horizontal-icon").show()
   $("#settings-header").show()
   $("#chart-controls").show()
 })
