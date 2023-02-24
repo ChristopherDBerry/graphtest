@@ -146,23 +146,35 @@ function buildNodes() {
   redrawMain()
   var static_results = $('.static-results-table tbody')
   static_results.empty()
-  nodes.forEach(function (node, index) {
+  for (let i = 0; i < nodes.length; i++) {
+    node = nodes[i]
     console.log(node)
+    if (node.group === 'cluster') continue
     var row = $('<tr>')
     var cell = $('<td>') //icon
+    var icon = $(`<div class='minor-icon minor-icon-${node.group}'></div>`)
+    icon.appendTo(cell)
     cell.appendTo(row)
-    cell = $('<td>').text(node.url) //XXX title or url
+    cell = $(`<td><h2>${node.page_title}</h2>` +
+      `<a href='${node.url}' target='_blank'>${node.url}</a></td>`) //XXX title or url
     cell.appendTo(row)
     cell = $('<td>') //wcag
+    var a_line = `Level A: ${node.a_diags ? 'FAIL' : 'PASS'} (${node.a_techs || 0} techniques, ${node.a_diags || 0} failures)<br>`
+    var aa_line = `Level AA: ${node.aa_diags ? 'FAIL' : 'PASS'} (${node.aa_techs || 0} techniques, ${node.aa_diags || 0} failures)`
+    cell.html(a_line + aa_line)
     cell.appendTo(row)
     cell = $('<td>') //axe
+    var axe_line = `${node.axe_diags ? 'FAIL' : 'PASS'} (${node.axe_techs || 0} techniques, ${node.axe_diags || 0} failures)`
+    cell.html(axe_line)
     cell.appendTo(row)
-    cell = $('<td>') //content editot
+    cell = $('<td>') //content editor
+    var ce_line = `${node.red_diags ? 'FAIL' : 'PASS'} (${node.red_diags || 0} issues)`
+    cell.html(ce_line)
     cell.appendTo(row)
-    cell = $('<td>') //recheck
+    cell = $(`<td><button type="button" class="btn btn-primary">Check</button></td>`)
     cell.appendTo(row)
     row.appendTo(static_results)
-  });
+  }
 }
 
 $(function() {
@@ -216,6 +228,7 @@ $.get('/json/vis/all', function(data) {
   ACTIVE_ELEMENTS.edges.add(data.edges)
   console.log(ALL_ELEMENTS)
   redrawMain()
+  buildNodes()
   $("#chart-loading").hide()
   $(".expand-horizontal-icon").show()
   $("#settings-header").show()

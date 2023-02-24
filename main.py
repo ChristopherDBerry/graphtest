@@ -253,17 +253,16 @@ def get_vis_hierarchy():
             if url in node_id:
                 continue
             node_id[url] = i
-            group = page.get("group")
-            distance = page['distance']
-            size = 1 #disable for now page.get("size", 0)
-            node = {"id": i, "url": url, "group": page['level'],
-                'distance': distance,
-                "label": '', "value": size,}
+            node = {"id": i, "label": '', "value": 1}
+            node.update(page)
             if page.get("screenshot"):
                 node["screenshot_url"] = page["screenshot"]
+            node["group"] = page['level']
+            node["page_title"] = page['title']
+            distance = page['distance']
             if distance == 0: #XXX fix position of homepage
-                node["y"] = -1
-                node["x"] = 1
+                node["y"] = 50
+                node["x"] = 50
             nodes.append(node)
             i += 1
         for page_link in (('n', 'm'), ('m', 'o'), ('o', 'p')):
