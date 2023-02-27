@@ -64,13 +64,16 @@ class Importer:
                 "UNWIND value AS item "
                 "MERGE (p:Page {url: item.url}) "
                 "SET p.screenshot = item.screenshot.storage, "
+                "p.title = item.title, "
+                "p.description = item.description, "
                 "p.contentTested = item.contentTested,"
                 "p.mimeType = item.mimeType, "
                 "p.page = item.page, p.path = item.path, "
                 "p.backlinks = 0, p.size = 1, p.mass = 1, "
                 "p.group = 'ok', "
+                "p.yellow_techs = 0, p.amber_techs = 0, p.red_techs = 0, "
                 "p.yellow_diags = 0, p.amber_diags = 0, p.red_diags = 0, "
-                "p.homePage = item.homePage ")
+                "p.top_ten = 0, p.homePage = item.homePage ")
         data_subset = []
         for (n, row) in enumerate(_data, 1):
             data_subset.append(row)
@@ -181,6 +184,13 @@ class Importer:
                 "'H44' IN d.techniques OR 'F84' IN d.techniques "
             "WITH n, COUNT(d) AS techs, SUM(hd.count) AS diags "
             "SET n.level = 'red', n.red_techs = techs, n.red_diags = diags"
+        ).consume()
+        tx.run(
+            "MATCH (p:Page) WITH p ORDER BY p.distance ASC, "
+                "p.red_techs DESC, p.red_diags DESC, "
+                "p.a_techs DESC, p.a_diags DESC "
+                "LIMIT 10 "
+                "SET p.top_ten=1"
         ).consume()
 
     @staticmethod
@@ -334,6 +344,10 @@ class Importer:
                 page['mimeType'] = row['mimeType']
             if 'contentTested' in row:
                 page['contentTested'] = row['contentTested']
+            if 'title' in row:
+                page['title'] = row['title']
+            if 'description' in row:
+                page['description'] = row['description']
             if 'screenshot' in row:
                 page['screenshot'] = row['screenshot']
             if url in self.data_pages:
@@ -377,12 +391,12 @@ class Importer:
             session.execute_write(self.diags, self.data_diags)
             log.warning("setting backlinks")
             session.execute_write(self.set_backlinks)
-            log.warning("setting totals")
-            session.execute_write(self.set_diag_totals)
             log.warning("setting distances")
             pages = session.execute_write(self.get_pages)
             for page in pages:
                 session.execute_write(self.set_distance, page['n'])
+            log.warning("setting totals")
+            session.execute_write(self.set_diag_totals)
             log.warning("building clusters")
             cluster_urls = session.execute_write(self.section_cluster_urls)
             for url in cluster_urls:
