@@ -2,8 +2,8 @@ var NODES = new vis.DataSet([])
 var EDGES = new vis.DataSet([])
 
 var DISTANCE = 3
-
 var PRIORITIES = ['red', 'amber', 'yellow', 'green']
+var TOPTEN = 0
 
 var ALL_ELEMENTS = {
 }
@@ -136,10 +136,17 @@ function forceStop() {
 }
 
 function buildNodes() {
-  var nodes = ALL_ELEMENTS.nodes.filter(function(x) {
-    return x.group === 'cluster' || (x.distance <= DISTANCE &&
-      PRIORITIES.indexOf(x.group) > -1 )
-  })
+  if (TOPTEN === 1) {
+    nodes = ALL_ELEMENTS.nodes.filter(function(x) {
+      return x.top_ten === 1
+    })
+  } else {
+    nodes = ALL_ELEMENTS.nodes.filter(function(x) {
+      return x.group === 'cluster' || (x.distance <= DISTANCE &&
+        PRIORITIES.indexOf(x.group) > -1 )
+    })
+  }
+  //
   //XXX reorder nodes
   ACTIVE_ELEMENTS.nodes.clear()
   ACTIVE_ELEMENTS.nodes.add(nodes)
@@ -235,18 +242,41 @@ $.get('/json/vis/all', function(data) {
   $("#chart-controls").show()
 })
 
+function updateToggleButton(toggle) {
+  if (toggle.data('value') === 1)
+    toggle.removeClass('empty-toggle')
+  else
+    toggle.addClass('empty-toggle')
+}
+
+$(".black-button").click(function() {
+  var toggle = $(this)
+  if (toggle.data('value') === 1) {
+    toggle.data('value', 0)
+    TOPTEN = 0
+  } else {
+    toggle.data('value', 1)
+    TOPTEN = 1
+  }
+  updateToggleButton(toggle)
+  buildNodes()
+})
+
 $(".red-button").click(function() {
   if (PRIORITIES.indexOf('red') > -1)
     PRIORITIES.splice(PRIORITIES.indexOf('red'), 1)
   var toggle = $(".red-button")
   if (toggle.data('value') === 1) {
     toggle.data('value', 0)
-    toggle.addClass('empty-toggle')
   } else {
     PRIORITIES.push('red')
     toggle.data('value', 1)
-    toggle.removeClass('empty-toggle')
   }
+  updateToggleButton(toggle)
+  toggle = $(".black-button")
+  toggle.data('value', 0)
+  TOPTEN = 0
+  updateToggleButton(toggle)
   buildNodes()
 })
 $(".amber-button").click(function() {
@@ -255,12 +285,15 @@ $(".amber-button").click(function() {
   var toggle = $(".amber-button")
   if (toggle.data('value') === 1) {
     toggle.data('value', 0)
-    toggle.addClass('empty-toggle')
   } else {
     PRIORITIES.push('amber')
     toggle.data('value', 1)
-    toggle.removeClass('empty-toggle')
   }
+  updateToggleButton(toggle)
+  toggle = $(".black-button")
+  toggle.data('value', 0)
+  TOPTEN = 0
+  updateToggleButton(toggle)
   buildNodes()
 })
 $(".yellow-button").click(function() {
@@ -269,12 +302,15 @@ $(".yellow-button").click(function() {
   var toggle = $(".yellow-button")
   if (toggle.data('value') === 1) {
     toggle.data('value', 0)
-    toggle.addClass('empty-toggle')
   } else {
     PRIORITIES.push('yellow')
     toggle.data('value', 1)
-    toggle.removeClass('empty-toggle')
   }
+  updateToggleButton(toggle)
+  toggle = $(".black-button")
+  toggle.data('value', 0)
+  TOPTEN = 0
+  updateToggleButton(toggle)
   buildNodes()
 })
 $(".green-button").click(function() {
@@ -283,12 +319,15 @@ $(".green-button").click(function() {
   var toggle = $(".green-button")
   if (toggle.data('value') === 1) {
     toggle.data('value', 0)
-    toggle.addClass('empty-toggle')
   } else {
     PRIORITIES.push('green')
     toggle.data('value', 1)
-    toggle.removeClass('empty-toggle')
   }
+  updateToggleButton(toggle)
+  toggle = $(".black-button")
+  toggle.data('value', 0)
+  TOPTEN = 0
+  updateToggleButton(toggle)
   buildNodes()
 })
 
