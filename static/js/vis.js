@@ -140,6 +140,14 @@ function buildNodes() {
     nodes = ALL_ELEMENTS.nodes.filter(function(x) {
       return x.top_ten === 1
     })
+    for (let i = 0; i < nodes.length; i++) {
+      node = nodes[i]
+      node.shape = 'image'
+      var url = `/image/${encodeURIComponent(node.screenshot_url.substr(18))}`
+      node.image = url
+      node.value = 80
+      node.scaling = {min: 80, max: 80}
+    }
   } else {
     nodes = ALL_ELEMENTS.nodes.filter(function(x) {
       return x.group === 'cluster' || (x.distance <= DISTANCE &&

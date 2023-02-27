@@ -269,6 +269,10 @@ h1, h2, h3, h4 {
   border-spacing: 0;
 }
 
+.static-results-table td {
+  font-size:11px;
+}
+
 .static-results-table h2 {
     text-decoration: underline;
     font-weight: bold;

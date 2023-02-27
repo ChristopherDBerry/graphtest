@@ -7,7 +7,6 @@ from urllib.parse import urlparse
 
 import keys
 
-from flask import render_template, url_for, request, jsonify
 from flask import (
     Flask,
     g,
@@ -423,6 +422,21 @@ def neovis_simple():
                            url = NEO4J_URL,
                            username=username, password=password)
 
+
+#Image functions
+
+@app.route('/image/<remote>')
+def image(remote):
+    remote = 'https://dxtfs.com/' + remote
+    from PIL import Image
+    import io
+    import urllib
+    rep = urllib.request.urlopen(remote)
+    img_data = rep.read()
+    output = io.BytesIO()
+    with Image.open(io.BytesIO(img_data)) as im:
+        im.crop((0, 0, 800, 800)).save(output, "PNG")
+    return Response(output.getvalue(), mimetype="image/png")
 
 if __name__ == "__main__":
     logging.root.setLevel(logging.INFO)
