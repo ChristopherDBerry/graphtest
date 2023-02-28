@@ -427,6 +427,8 @@ def neovis_simple():
 
 @app.route('/image/<remote>')
 def image(remote):
+    #Fetch and clip the image
+    #Obviously needs optimising
     remote = 'https://dxtfs.com/' + remote
     from PIL import Image
     import io

@@ -140,14 +140,18 @@ function buildNodes() {
     nodes = ALL_ELEMENTS.nodes.filter(function(x) {
       return x.top_ten === 1
     })
+    var copied_nodes = []
     for (let i = 0; i < nodes.length; i++) {
-      node = nodes[i]
+      node = JSON.parse(JSON.stringify(nodes[i]))
       node.shape = 'image'
       var url = `/image/${encodeURIComponent(node.screenshot_url.substr(18))}`
       node.image = url
       node.value = 80
       node.scaling = {min: 80, max: 80}
+      delete node.title
+      copied_nodes.push(node)
     }
+    nodes = copied_nodes
   } else {
     nodes = ALL_ELEMENTS.nodes.filter(function(x) {
       return x.group === 'cluster' || (x.distance <= DISTANCE &&
@@ -163,7 +167,6 @@ function buildNodes() {
   static_results.empty()
   for (let i = 0; i < nodes.length; i++) {
     node = nodes[i]
-    console.log(node)
     if (node.group === 'cluster') continue
     var row = $('<tr>')
     var cell = $('<td>') //icon
@@ -195,14 +198,17 @@ function buildNodes() {
 $(function() {
 
 $("#distance1").click(function() {
+  setTopTen(0)
   DISTANCE = 1
   buildNodes()
 })
 $("#distance2").click(function() {
+  setTopTen(0)
   DISTANCE = 2
   buildNodes()
 })
 $("#distance3").click(function() {
+  setTopTen(0)
   DISTANCE = 3
   buildNodes()
 })
@@ -241,7 +247,6 @@ $.get('/json/vis/all', function(data) {
   ACTIVE_ELEMENTS.edges.clear()
   ACTIVE_ELEMENTS.nodes.add(data.nodes)
   ACTIVE_ELEMENTS.edges.add(data.edges)
-  console.log(ALL_ELEMENTS)
   redrawMain()
   buildNodes()
   $("#chart-loading").hide()
@@ -257,16 +262,15 @@ function updateToggleButton(toggle) {
     toggle.addClass('empty-toggle')
 }
 
+function setTopTen(value=0) {
+  $(".black-button").data('value', value)
+  TOPTEN = value
+  updateToggleButton($(".black-button"))
+}
+
 $(".black-button").click(function() {
-  var toggle = $(this)
-  if (toggle.data('value') === 1) {
-    toggle.data('value', 0)
-    TOPTEN = 0
-  } else {
-    toggle.data('value', 1)
-    TOPTEN = 1
-  }
-  updateToggleButton(toggle)
+  var value = $(this).data('value') === 0 ? 1 : 0
+  setTopTen(value)
   buildNodes()
 })
 
@@ -281,10 +285,7 @@ $(".red-button").click(function() {
     toggle.data('value', 1)
   }
   updateToggleButton(toggle)
-  toggle = $(".black-button")
-  toggle.data('value', 0)
-  TOPTEN = 0
-  updateToggleButton(toggle)
+  setTopTen(0)
   buildNodes()
 })
 $(".amber-button").click(function() {
@@ -298,10 +299,7 @@ $(".amber-button").click(function() {
     toggle.data('value', 1)
   }
   updateToggleButton(toggle)
-  toggle = $(".black-button")
-  toggle.data('value', 0)
-  TOPTEN = 0
-  updateToggleButton(toggle)
+  setTopTen(0)
   buildNodes()
 })
 $(".yellow-button").click(function() {
@@ -315,10 +313,7 @@ $(".yellow-button").click(function() {
     toggle.data('value', 1)
   }
   updateToggleButton(toggle)
-  toggle = $(".black-button")
-  toggle.data('value', 0)
-  TOPTEN = 0
-  updateToggleButton(toggle)
+  setTopTen(0)
   buildNodes()
 })
 $(".green-button").click(function() {
@@ -332,10 +327,7 @@ $(".green-button").click(function() {
     toggle.data('value', 1)
   }
   updateToggleButton(toggle)
-  toggle = $(".black-button")
-  toggle.data('value', 0)
-  TOPTEN = 0
-  updateToggleButton(toggle)
+  setTopTen(0)
   buildNodes()
 })
 
