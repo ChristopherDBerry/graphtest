@@ -170,24 +170,33 @@ function buildNodes() {
     if (node.group === 'cluster') continue
     var row = $('<tr>')
     var cell = $('<td>') //icon
-    var icon = $(`<div class='minor-icon minor-icon-${node.group}'></div>`)
+    var icon = $(`<div class='minor-icon minor-icon-${node.group}'>`)
     icon.appendTo(cell)
     cell.appendTo(row)
     cell = $(`<td><h2>${node.page_title}</h2>` +
       `<a href='${node.url}' target='_blank'>${node.url}</a></td>`) //XXX title or url
     cell.appendTo(row)
     cell = $('<td>') //wcag
+    var line_container = $(`<span class='${node.a_techs ? 'fail' : 'pass'}-line'>`)
     var a_line = `Level A: ${node.a_diags ? 'FAIL' : 'PASS'} (${node.a_techs || 0} techniques, ${node.a_diags || 0} failures)<br>`
+    line_container.html(a_line)
+    cell.append(line_container)
+    line_container = $(`<span class='${node.aa_techs ? 'fail' : 'pass'}-line'>`)
     var aa_line = `Level AA: ${node.aa_diags ? 'FAIL' : 'PASS'} (${node.aa_techs || 0} techniques, ${node.aa_diags || 0} failures)`
-    cell.html(a_line + aa_line)
+    line_container.html(aa_line)
+    cell.append(line_container)
     cell.appendTo(row)
     cell = $('<td>') //axe
+    line_container = $(`<span class='${node.axe_techs ? 'fail' : 'pass'}-line'>`)
     var axe_line = `${node.axe_diags ? 'FAIL' : 'PASS'} (${node.axe_techs || 0} techniques, ${node.axe_diags || 0} failures)`
-    cell.html(axe_line)
+    line_container.html(axe_line)
+    cell.append(line_container)
     cell.appendTo(row)
     cell = $('<td>') //content editor
+    line_container = $(`<span class='${node.red_techs ? 'fail' : 'pass'}-line'>`)
     var ce_line = `${node.red_diags ? 'FAIL' : 'PASS'} (${node.red_diags || 0} issues)`
-    cell.html(ce_line)
+    line_container.html(ce_line)
+    cell.append(line_container)
     cell.appendTo(row)
     cell = $(`<td><button type="button" class="btn btn-primary">Check</button></td>`)
     cell.appendTo(row)
@@ -235,6 +244,17 @@ $(".expand-horizontal").click(function() {
     $('#chart-controls p').show()
     $(".expand-horizontal-icon").removeClass('contract-horizontal-icon')
   }
+})
+
+$.get('/json/vis/summary', function(data) {
+  for (const id of ['ce', 'a', 'aa', 'axe']) {
+    if (data[id + "_techs"]) $('.' + id + '-heading-line').addClass('fail-line')
+    else $('.' + id + '-heading-line').addClass('pass-line')
+    var line = `${data[id + "_techs"] ? 'FAIL' : 'PASS'} (${data[id + "_techs"]} techniques, ${data[id + "_diags"]} failures)`
+    $('.' + id + '-heading-line').html(line)
+  }
+
+
 })
 
 $.get('/json/vis/all', function(data) {

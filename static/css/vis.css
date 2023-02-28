@@ -154,6 +154,14 @@ h1, h2, h3, h4 {
   background: white;
 }
 
+.pass-line {
+  color: green;
+}
+
+.fail-line {
+  color: red;
+}
+
 .category-icon,
 .distance-icon,
 .user-icon,
