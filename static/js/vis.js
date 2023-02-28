@@ -140,6 +140,18 @@ function buildNodes() {
     nodes = ALL_ELEMENTS.nodes.filter(function(x) {
       return x.top_ten === 1
     })
+    var copied_nodes = []
+    for (let i = 0; i < nodes.length; i++) {
+      node = JSON.parse(JSON.stringify(nodes[i]))
+      node.shape = 'image'
+      var url = `/image/${encodeURIComponent(node.screenshot_url.substr(18))}`
+      node.image = url
+      node.value = 80
+      node.scaling = {min: 80, max: 80}
+      delete node.title
+      copied_nodes.push(node)
+    }
+    nodes = copied_nodes
   } else {
     nodes = ALL_ELEMENTS.nodes.filter(function(x) {
       return x.group === 'cluster' || (x.distance <= DISTANCE &&
@@ -155,28 +167,36 @@ function buildNodes() {
   static_results.empty()
   for (let i = 0; i < nodes.length; i++) {
     node = nodes[i]
-    console.log(node)
     if (node.group === 'cluster') continue
     var row = $('<tr>')
     var cell = $('<td>') //icon
-    var icon = $(`<div class='minor-icon minor-icon-${node.group}'></div>`)
+    var icon = $(`<div class='minor-icon minor-icon-${node.group}'>`)
     icon.appendTo(cell)
     cell.appendTo(row)
     cell = $(`<td><h2>${node.page_title}</h2>` +
       `<a href='${node.url}' target='_blank'>${node.url}</a></td>`) //XXX title or url
     cell.appendTo(row)
     cell = $('<td>') //wcag
+    var line_container = $(`<span class='${node.a_techs ? 'fail' : 'pass'}-line'>`)
     var a_line = `Level A: ${node.a_diags ? 'FAIL' : 'PASS'} (${node.a_techs || 0} techniques, ${node.a_diags || 0} failures)<br>`
+    line_container.html(a_line)
+    cell.append(line_container)
+    line_container = $(`<span class='${node.aa_techs ? 'fail' : 'pass'}-line'>`)
     var aa_line = `Level AA: ${node.aa_diags ? 'FAIL' : 'PASS'} (${node.aa_techs || 0} techniques, ${node.aa_diags || 0} failures)`
-    cell.html(a_line + aa_line)
+    line_container.html(aa_line)
+    cell.append(line_container)
     cell.appendTo(row)
     cell = $('<td>') //axe
+    line_container = $(`<span class='${node.axe_techs ? 'fail' : 'pass'}-line'>`)
     var axe_line = `${node.axe_diags ? 'FAIL' : 'PASS'} (${node.axe_techs || 0} techniques, ${node.axe_diags || 0} failures)`
-    cell.html(axe_line)
+    line_container.html(axe_line)
+    cell.append(line_container)
     cell.appendTo(row)
     cell = $('<td>') //content editor
+    line_container = $(`<span class='${node.red_techs ? 'fail' : 'pass'}-line'>`)
     var ce_line = `${node.red_diags ? 'FAIL' : 'PASS'} (${node.red_diags || 0} issues)`
-    cell.html(ce_line)
+    line_container.html(ce_line)
+    cell.append(line_container)
     cell.appendTo(row)
     cell = $(`<td><button type="button" class="btn btn-primary">Check</button></td>`)
     cell.appendTo(row)
@@ -187,14 +207,17 @@ function buildNodes() {
 $(function() {
 
 $("#distance1").click(function() {
+  setTopTen(0)
   DISTANCE = 1
   buildNodes()
 })
 $("#distance2").click(function() {
+  setTopTen(0)
   DISTANCE = 2
   buildNodes()
 })
 $("#distance3").click(function() {
+  setTopTen(0)
   DISTANCE = 3
   buildNodes()
 })
@@ -223,6 +246,20 @@ $(".expand-horizontal").click(function() {
   }
 })
 
+$.get('/json/vis/summary', function(data) {
+  $('.dexter-total-main-heading').html(data['url'])
+  $('.screencontents').css('background-image',
+    'url("' + data['screenshot'] + '")')
+  for (const id of ['ce', 'a', 'aa', 'axe']) {
+    if (data[id + "_techs"]) $('.' + id + '-heading-line').addClass('fail-line')
+    else $('.' + id + '-heading-line').addClass('pass-line')
+    var line = `${data[id + "_techs"] ? 'FAIL' : 'PASS'} (${data[id + "_techs"]} techniques, ${data[id + "_diags"]} failures)`
+    $('.' + id + '-heading-line').html(line)
+  }
+
+
+})
+
 $.get('/json/vis/all', function(data) {
   for (var node of data.nodes) {
     if (node.url)
@@ -233,7 +270,6 @@ $.get('/json/vis/all', function(data) {
   ACTIVE_ELEMENTS.edges.clear()
   ACTIVE_ELEMENTS.nodes.add(data.nodes)
   ACTIVE_ELEMENTS.edges.add(data.edges)
-  console.log(ALL_ELEMENTS)
   redrawMain()
   buildNodes()
   $("#chart-loading").hide()
@@ -249,16 +285,15 @@ function updateToggleButton(toggle) {
     toggle.addClass('empty-toggle')
 }
 
+function setTopTen(value=0) {
+  $(".black-button").data('value', value)
+  TOPTEN = value
+  updateToggleButton($(".black-button"))
+}
+
 $(".black-button").click(function() {
-  var toggle = $(this)
-  if (toggle.data('value') === 1) {
-    toggle.data('value', 0)
-    TOPTEN = 0
-  } else {
-    toggle.data('value', 1)
-    TOPTEN = 1
-  }
-  updateToggleButton(toggle)
+  var value = $(this).data('value') === 0 ? 1 : 0
+  setTopTen(value)
   buildNodes()
 })
 
@@ -273,10 +308,7 @@ $(".red-button").click(function() {
     toggle.data('value', 1)
   }
   updateToggleButton(toggle)
-  toggle = $(".black-button")
-  toggle.data('value', 0)
-  TOPTEN = 0
-  updateToggleButton(toggle)
+  setTopTen(0)
   buildNodes()
 })
 $(".amber-button").click(function() {
@@ -290,10 +322,7 @@ $(".amber-button").click(function() {
     toggle.data('value', 1)
   }
   updateToggleButton(toggle)
-  toggle = $(".black-button")
-  toggle.data('value', 0)
-  TOPTEN = 0
-  updateToggleButton(toggle)
+  setTopTen(0)
   buildNodes()
 })
 $(".yellow-button").click(function() {
@@ -307,10 +336,7 @@ $(".yellow-button").click(function() {
     toggle.data('value', 1)
   }
   updateToggleButton(toggle)
-  toggle = $(".black-button")
-  toggle.data('value', 0)
-  TOPTEN = 0
-  updateToggleButton(toggle)
+  setTopTen(0)
   buildNodes()
 })
 $(".green-button").click(function() {
@@ -324,10 +350,7 @@ $(".green-button").click(function() {
     toggle.data('value', 1)
   }
   updateToggleButton(toggle)
-  toggle = $(".black-button")
-  toggle.data('value', 0)
-  TOPTEN = 0
-  updateToggleButton(toggle)
+  setTopTen(0)
   buildNodes()
 })
 

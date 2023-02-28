@@ -154,6 +154,14 @@ h1, h2, h3, h4 {
   background: white;
 }
 
+.pass-line {
+  color: green;
+}
+
+.fail-line {
+  color: red;
+}
+
 .category-icon,
 .distance-icon,
 .user-icon,
@@ -267,6 +275,10 @@ h1, h2, h3, h4 {
 .static-results-table {
   border-collapse: collapse;
   border-spacing: 0;
+}
+
+.static-results-table td {
+  font-size:11px;
 }
 
 .static-results-table h2 {

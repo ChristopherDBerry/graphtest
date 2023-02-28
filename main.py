@@ -7,7 +7,6 @@ from urllib.parse import urlparse
 
 import keys
 
-from flask import render_template, url_for, request, jsonify
 from flask import (
     Flask,
     g,
@@ -220,6 +219,28 @@ def get_d3_concept():
                     mimetype="application/json")
 
 
+@app.route("/json/vis/summary")
+def get_vis_summary():
+    def get_screenshot(tx):
+        result = tx.run("MATCH (p:Page {homePage: 1}) RETURN p")
+        return result.single()
+    def get_totals(tx):
+        result = tx.run("MATCH (p:Page) RETURN "
+            "SUM(p.red_techs) AS ce_techs, SUM(p.red_diags) AS ce_diags, "
+            "SUM(p.a_techs) AS a_techs, SUM(p.a_diags) AS a_diags, "
+            "SUM(p.aa_techs) AS aa_techs, SUM(p.aa_diags) AS aa_diags, "
+            "SUM(p.axe_techs) AS axe_techs, SUM(p.axe_diags) AS axe_diags")
+        return result.single()
+    db = get_db()
+    output = {}
+    result = db.execute_read(get_screenshot)
+    output['screenshot'] = result['p']['screenshot']
+    output['url'] = result['p']['url']
+    result = db.execute_read(get_totals)
+    output.update(result)
+    return Response(dumps(output), mimetype="application/json")
+
+
 @app.route("/json/vis/all")
 def get_vis_hierarchy():
     def pages(tx):
@@ -423,6 +444,23 @@ def neovis_simple():
                            url = NEO4J_URL,
                            username=username, password=password)
 
+
+#Image functions
+
+@app.route('/image/<remote>')
+def image(remote):
+    #Fetch and clip the image
+    #Obviously needs optimising
+    remote = 'https://dxtfs.com/' + remote
+    from PIL import Image
+    import io
+    import urllib
+    rep = urllib.request.urlopen(remote)
+    img_data = rep.read()
+    output = io.BytesIO()
+    with Image.open(io.BytesIO(img_data)) as im:
+        im.crop((0, 0, 800, 800)).save(output, "PNG")
+    return Response(output.getvalue(), mimetype="image/png")
 
 if __name__ == "__main__":
     logging.root.setLevel(logging.INFO)

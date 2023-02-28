@@ -33,6 +33,9 @@
 <div id='chart-controls' style='display: none;'>
   <div class='chart-controls-section'>
     <p style='margin-top:100px;'>Distance from homepage:</p>
+    <div style='display:inline-block; vertical-align: top;'>
+      <div class="pseudo-toggle black-button empty-toggle" data-value='0'><span><small>TOP</small><br>10</span></div>
+    </div>
     <div style='display:inline-block;'>
       <div id='distance1' class="distance-icon distance-switch"  data-value='0'>1</div>
     </div>
@@ -45,9 +48,6 @@
   </div>
   <div class='chart-controls-section'>
     <p>Show pages to action:</p>
-    <div style='display:inline-block; vertical-align: top;'>
-      <div class="pseudo-toggle black-button empty-toggle" data-value='0'><span><small>TOP</small><br>10</span></div>
-    </div>
     <div style='display:inline-block; vertical-align: top;'>
       <div class="pseudo-toggle red-button" data-value='1'></div>
     </div>
@@ -114,31 +114,34 @@
   <div id="staticnetwork" style='display:none;'>
 
     <div class="screenbg">
-      <span class="screencontents" style="background-image:url('https://dxtfs.com/4933720e1c534050065450d35daeeac2235b602ebc8b412623033bee70518333(image,png)');" ></span>
+      <span class="screencontents"></span>
     </div>
 
     <div class='dexter-total-section'>
       <h2 class="dexter-total-main-heading">https://www.udemy.com/</h2>
+
+      <h2 class="dexter-total-heading">Content editorial standards</h2>
+      <p class="dexter-subtitle">This is the foundation of accessibility training for your content editors.</p>
+      <span class='dexter-total-label'><abbr title="Content Editor">CE</abbr> totals:</span>
+      <span class='dexter-total-result ce-heading-line'></span>
+      <br><br>
+
       <h2 class="dexter-total-heading"><abbr title='Web Content Accessibility Guidelines'>WCAG</abbr> diagnostics totals</h2>
       <p class="dexter-subtitle"><abbr title='Web Content Accessibility Guidelines'>WCAG</abbr> 2 covers a wide range of recommendations for making Web content more accessible to people with disabilities.</p>
 
-        <span class='dexter-total-label'>Level A:</span>
-        <span class='dexter-total-result fail'>FAIL (6 techniques, 62 failures)</span>
-        <span class='dexter-total-label'>Level AA:</span>
-        <span class='dexter-total-result fail'>FAIL (1 techniques, 3 failures)</span>
-        <br><br>
+      <span class='dexter-total-label'>Level A:</span>
+      <span class='dexter-total-result a-heading-line'></span>
+      <br>
+      <span class='dexter-total-label'>Level AA:</span>
+      <span class='dexter-total-result aa-heading-line'></span>
+      <br><br>
 
-        <h2 class="dexter-total-heading">axe diagnostics</h2>
-        <p class="dexter-subtitle">The accessibility rules engine 'axe-core' from deque labs is used by developers and accessibility experts to ensure alignment with accessibility guidelines.</p>
-        <span class='dexter-total-label'>axe totals:</span>
-        <span class='dexter-total-result fail'>FAIL (6 techniques, 62 failures)</span>
-        <br><br>
+      <h2 class="dexter-total-heading">axe diagnostics</h2>
+      <p class="dexter-subtitle">The accessibility rules engine 'axe-core' from deque labs is used by developers and accessibility experts to ensure alignment with accessibility guidelines.</p>
+      <span class='dexter-total-label'>axe totals:</span>
+      <span class='dexter-total-result axe-heading-line'></span>
+      <br><br>
 
-        <h2 class="dexter-total-heading">Content editorial standards</h2>
-        <p class="dexter-subtitle">This is the foundation of accessibility training for your content editors.</p>
-        <span class='dexter-total-label'><abbr title="Content Editor">CE</abbr> totals:</span>
-        <span class='dexter-total-result fail'>FAIL (6 techniques, 62 failures)</span>
-        <br><br>
     </div>
     <br><br>
     <hr>
