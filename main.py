@@ -222,7 +222,7 @@ def get_d3_concept():
 @app.route("/json/vis/summary")
 def get_vis_summary():
     def get_screenshot(tx):
-        result = tx.run("MATCH (p:Page {homePage: 1}) RETURN p.screenshot")
+        result = tx.run("MATCH (p:Page {homePage: 1}) RETURN p")
         return result.single()
     def get_totals(tx):
         result = tx.run("MATCH (p:Page) RETURN "
@@ -234,7 +234,8 @@ def get_vis_summary():
     db = get_db()
     output = {}
     result = db.execute_read(get_screenshot)
-    output['screenshot'] = result['p.screenshot']
+    output['screenshot'] = result['p']['screenshot']
+    output['url'] = result['p']['url']
     result = db.execute_read(get_totals)
     output.update(result)
     return Response(dumps(output), mimetype="application/json")

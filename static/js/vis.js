@@ -247,6 +247,9 @@ $(".expand-horizontal").click(function() {
 })
 
 $.get('/json/vis/summary', function(data) {
+  $('.dexter-total-main-heading').html(data['url'])
+  $('.screencontents').css('background-image',
+    'url("' + data['screenshot'] + '")')
   for (const id of ['ce', 'a', 'aa', 'axe']) {
     if (data[id + "_techs"]) $('.' + id + '-heading-line').addClass('fail-line')
     else $('.' + id + '-heading-line').addClass('pass-line')
