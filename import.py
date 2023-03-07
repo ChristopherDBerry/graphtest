@@ -70,7 +70,7 @@ class Importer:
                 "p.mimeType = item.mimeType, "
                 "p.page = item.page, p.path = item.path, "
                 "p.backlinks = 0, p.size = 1, p.mass = 1, "
-                "p.group = 'ok', "
+                "p.group = 'ok', p.finish = item.finish, "
                 "p.yellow_techs = 0, p.amber_techs = 0, p.red_techs = 0, "
                 "p.yellow_diags = 0, p.amber_diags = 0, p.red_diags = 0, "
                 "p.top_ten = 0, p.homePage = item.homePage ")
@@ -318,6 +318,9 @@ class Importer:
         body = response.text
         homepage = ''
         log.warning("Parsing pages")
+        summary = ijson.items(body, 'summary')
+        for line in summary:
+            finish = line['finish']
         pages_container = ijson.items(body, 'pages')
         for pages in pages_container:
             for page in pages:
@@ -355,6 +358,7 @@ class Importer:
                 page["path"] = path
             if url == homepage:
                 page["homePage"] = 1
+                page['finish'] = finish
             self.data_nodes.append(page)
             for link in row.get("links", {}).keys():
                 #XXX improve weight- link viz, footer, backlinks, etc
@@ -372,7 +376,6 @@ class Importer:
                     'category': diag['category'],
                     'module': diag['module'],
                     'name': diag['name'],
-                    #'level': diag['level'],
                     'level': level,
                     'techniques': techs,
 
