@@ -15,16 +15,28 @@
   src: url(../fonts/HelveticaNeue-bold.woff2);
 }
 
+.page-container {
+  width: 1170px;
+  margin: auto;
+}
+
+.dexter-header {
+  margin-bottom: 44px;
+}
+
+.dexter-header .main-td {
+  width: 144px;
+}
+
 .grey-fw-banner {
     background-color: #f2f2f2;
-    color: #273D78;
+    color: #213462;
     overflow-x: hidden;
     position: relative;
 }
 .grey-fw-banner h1 {
     font-family: "HelveticaNeueLight", "HelveticaNeue-Light", "Helvetica Neue Light", "HelveticaNeue", "Helvetica Neue", sans-serif, OpenSans-Light;
     font-size: 2.5rem;
-    margin-left: 36px;
 }
 .graph-display {
   position: absolute;
@@ -291,19 +303,23 @@ h1, h2, h3, h4 {
 
 .static-results-table a {
   color: #273D78;
-  text-decoration: none;
+  text-decoration: underline;
 }
 
 .static-results-table tr {
     height: 54px;
+    border-bottom: 1px solid #bbb;
+}
+
+.static-results-table thead tr {
     border-bottom: 2px solid #bbb;
 }
 
-.static-results-col-icon { width: 2%; }
-.static-results-col-title { width: 37%; }
+.static-results-col-icon { width: 3%; }
+.static-results-col-title { width: 36%; }
 .static-results-col-accessibility { width: 25%; }
 .static-results-col-axe { width: 20%; }
-.static-results-col-ce { width: 15%; }
+.static-results-col-ce { width: 10%; }
 .static-results-col-recheck { }
 
 .minor-icon {
@@ -327,8 +343,7 @@ Static results
 ****************************/
 
 #staticnetwork {
-  padding: 18px;
-  /*height:100vh;*/
+  padding: 66px 0;
   color: #273D78;
   overflow-y: auto;
 }
@@ -342,8 +357,6 @@ Static results
 }
 
 .dexter-total-main-heading {
-  font-size: 19px;
-  font-weight: bold;
 }
 
 .dexter-total-heading {

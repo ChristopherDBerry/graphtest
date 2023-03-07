@@ -4,6 +4,7 @@ import logging
 import os
 import requests
 from urllib.parse import urlparse
+import datetime
 
 import keys
 
@@ -221,7 +222,7 @@ def get_d3_concept():
 
 @app.route("/json/vis/summary")
 def get_vis_summary():
-    def get_screenshot(tx):
+    def get_homepage(tx):
         result = tx.run("MATCH (p:Page {homePage: 1}) RETURN p")
         return result.single()
     def get_totals(tx):
@@ -233,7 +234,10 @@ def get_vis_summary():
         return result.single()
     db = get_db()
     output = {}
-    result = db.execute_read(get_screenshot)
+    result = db.execute_read(get_homepage)
+    finish = datetime.datetime.strptime(
+        result['p']['finish'][:10], "%Y-%m-%d")
+    output['finish'] = finish.strftime('%d %B %Y')
     output['screenshot'] = result['p']['screenshot']
     output['url'] = result['p']['url']
     result = db.execute_read(get_totals)

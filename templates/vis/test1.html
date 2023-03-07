@@ -13,158 +13,167 @@
 <body>
 
 <div class="grey-fw-banner">
-  <h1>Sitemorse Results</h1>
-  <div class='graph-display' data-value='dynamic'>Switch to static view</div>
-</div>
-
-<div id="text" class='text-fat'>
-
-<div id='chart-loading'>
-  <h2>Loading nodes <span class="loader"></span></h2>
-</div>
-
-<div class='expand-horizontal-icon expand-horizontal' style='display: none;'>
-</div>
-<div id='settings-header' class='expand-horizontal' style='display: none; cursor:pointer;'>
-  <div class='settings-icon settings-med'></div>
-  <h2>&nbsp;Settings</h2>
-</div>
-
-<div id='chart-controls' style='display: none;'>
-  <div class='chart-controls-section'>
-    <p style='margin-top:100px;'>Distance from homepage:</p>
-    <div style='display:inline-block; vertical-align: top;'>
-      <div class="pseudo-toggle black-button empty-toggle" data-value='0'><span><small>TOP</small><br>10</span></div>
-    </div>
-    <div style='display:inline-block;'>
-      <div id='distance1' class="distance-icon distance-switch"  data-value='0'>1</div>
-    </div>
-    <div style='display:inline-block;'>
-      <div id='distance2' class="distance-icon distance-switch" data-value='0'>2</div>
-    </div>
-    <div style='display:inline-block;'>
-      <div id='distance3' class="distance-icon distance-switch distance-switch-selected" data-value='1'>3</div>
-    </div>
+  <div class='page-container'>
+    <h1>Sitemorse Results</h1>
+    <div class='graph-display' data-value='dynamic'>Switch to static view</div>
   </div>
-  <div class='chart-controls-section'>
-    <p>Show pages to action:</p>
-    <div style='display:inline-block; vertical-align: top;'>
-      <div class="pseudo-toggle red-button" data-value='1'></div>
-    </div>
-    <div style='display:inline-block; vertical-align: top;'>
-      <div class="pseudo-toggle amber-button" data-value='1'></div>
-    </div>
-    <div style='display:inline-block; vertical-align: top;'>
-      <div class="pseudo-toggle yellow-button" data-value='1'></div>
-    </div>
-    <div style='display:inline-block; vertical-align: top;'>
-      <div class="pseudo-toggle green-button" data-value='1'></div>
-    </div>
-  </div>
-  <div class='chart-controls-section'>
-    <p>Show pages to action by user:</p>
-    <div style='display:inline-block;'>
-      <div class="user-icon">CB</div>
-    </div>
-    <div style='display:inline-block;'>
-      <div class="user-icon">JR</div>
-    </div>
-    <div style='display:inline-block;'>
-      <div class="user-icon">LS</div>
-    </div>
-    <div style='display:inline-block;'>
-      <div class="user-icon">MC</div>
-    </div>
-  </div>
-  <div class='chart-controls-section'>
-    <p>Show pages to action by category:</p>
-    <div style='display:inline-block;'>
-      <div class="category-icon category-accessibility"></div>
-    </div>
-    <div style='display:inline-block;'>
-      <div class="category-icon category-links"></div>
-    </div>
-    <div style='display:inline-block;'>
-      <div class="category-icon category-code"></div>
-    </div>
-    <div style='display:inline-block;'>
-      <div class="category-icon category-seo"></div>
-    </div>
-    <div style='display:inline-block;'>
-      <div class="category-icon category-email"></div>
-    </div>
-    <div style='display:inline-block;'>
-      <div class="category-icon category-privacy"></div>
-    </div>
-    <div style='display:inline-block;'>
-      <div class="category-icon category-performance"></div>
-    </div>
-    <div style='display:inline-block;'>
-      <div class="category-icon category-spelling"></div>
-    </div>
-    <div style='display:inline-block;'>
-      <div class="category-icon category-brand"></div>
-    </div>
-  </div>
-</div><!--/chart-controls-->
 </div>
 
-<div id="mynetwork-container">
-  <div id="mynetwork"></div>
-  <div id="staticnetwork" style='display:none;'>
-
-    <div class="screenbg">
-      <span class="screencontents"></span>
+<div class='page-container'>
+  <div id="text" class='text-fat'>
+    <div id='chart-loading'>
+      <h2>Loading nodes <span class="loader"></span></h2>
     </div>
 
-    <div class='dexter-total-section'>
-      <h2 class="dexter-total-main-heading">https://www.udemy.com/</h2>
-
-      <h2 class="dexter-total-heading">Content editorial standards</h2>
-      <p class="dexter-subtitle">This is the foundation of accessibility training for your content editors.</p>
-      <span class='dexter-total-label'><abbr title="Content Editor">CE</abbr> totals:</span>
-      <span class='dexter-total-result ce-heading-line'></span>
-      <br><br>
-
-      <h2 class="dexter-total-heading"><abbr title='Web Content Accessibility Guidelines'>WCAG</abbr> diagnostics totals</h2>
-      <p class="dexter-subtitle"><abbr title='Web Content Accessibility Guidelines'>WCAG</abbr> 2 covers a wide range of recommendations for making Web content more accessible to people with disabilities.</p>
-
-      <span class='dexter-total-label'>Level A:</span>
-      <span class='dexter-total-result a-heading-line'></span>
-      <br>
-      <span class='dexter-total-label'>Level AA:</span>
-      <span class='dexter-total-result aa-heading-line'></span>
-      <br><br>
-
-      <h2 class="dexter-total-heading">axe diagnostics</h2>
-      <p class="dexter-subtitle">The accessibility rules engine 'axe-core' from deque labs is used by developers and accessibility experts to ensure alignment with accessibility guidelines.</p>
-      <span class='dexter-total-label'>axe totals:</span>
-      <span class='dexter-total-result axe-heading-line'></span>
-      <br><br>
-
+    <div class='expand-horizontal-icon expand-horizontal' style='display: none;'>
     </div>
-    <br><br>
-    <hr>
+    <div id='settings-header' class='expand-horizontal' style='display: none; cursor:pointer;'>
+      <div class='settings-icon settings-med'></div>
+      <h2>&nbsp;Settings</h2>
+    </div>
 
-    <h2>Pages</h2>
+    <div id='chart-controls' style='display: none;'>
+      <div class='chart-controls-section'>
+        <p style='margin-top:100px;'>Distance from homepage:</p>
+        <div style='display:inline-block; vertical-align: top;'>
+          <div class="pseudo-toggle black-button empty-toggle" data-value='0'><span><small>TOP</small><br>10</span></div>
+        </div>
+        <div style='display:inline-block;'>
+          <div id='distance1' class="distance-icon distance-switch"  data-value='0'>1</div>
+        </div>
+        <div style='display:inline-block;'>
+          <div id='distance2' class="distance-icon distance-switch" data-value='0'>2</div>
+        </div>
+        <div style='display:inline-block;'>
+          <div id='distance3' class="distance-icon distance-switch distance-switch-selected" data-value='1'>3</div>
+        </div>
+      </div>
+      <div class='chart-controls-section'>
+        <p>Show pages to action:</p>
+        <div style='display:inline-block; vertical-align: top;'>
+          <div class="pseudo-toggle red-button" data-value='1'></div>
+        </div>
+        <div style='display:inline-block; vertical-align: top;'>
+          <div class="pseudo-toggle amber-button" data-value='1'></div>
+        </div>
+        <div style='display:inline-block; vertical-align: top;'>
+          <div class="pseudo-toggle yellow-button" data-value='1'></div>
+        </div>
+        <div style='display:inline-block; vertical-align: top;'>
+          <div class="pseudo-toggle green-button" data-value='1'></div>
+        </div>
+      </div>
+      <div class='chart-controls-section'>
+        <p>Show pages to action by user:</p>
+        <div style='display:inline-block;'>
+          <div class="user-icon">CB</div>
+        </div>
+        <div style='display:inline-block;'>
+          <div class="user-icon">JR</div>
+        </div>
+        <div style='display:inline-block;'>
+          <div class="user-icon">LS</div>
+        </div>
+        <div style='display:inline-block;'>
+          <div class="user-icon">MC</div>
+        </div>
+      </div>
+      <div class='chart-controls-section'>
+        <p>Show pages to action by category:</p>
+        <div style='display:inline-block;'>
+          <div class="category-icon category-accessibility"></div>
+        </div>
+        <div style='display:inline-block;'>
+          <div class="category-icon category-links"></div>
+        </div>
+        <div style='display:inline-block;'>
+          <div class="category-icon category-code"></div>
+        </div>
+        <div style='display:inline-block;'>
+          <div class="category-icon category-seo"></div>
+        </div>
+        <div style='display:inline-block;'>
+          <div class="category-icon category-email"></div>
+        </div>
+        <div style='display:inline-block;'>
+          <div class="category-icon category-privacy"></div>
+        </div>
+        <div style='display:inline-block;'>
+          <div class="category-icon category-performance"></div>
+        </div>
+        <div style='display:inline-block;'>
+          <div class="category-icon category-spelling"></div>
+        </div>
+        <div style='display:inline-block;'>
+          <div class="category-icon category-brand"></div>
+        </div>
+      </div>
+    </div><!--/chart-controls-->
+  </div><!--/text-fat-->
 
-      <table class='static-results-table'>
-        <thead>
+  <div id="mynetwork-container">
+    <div id="mynetwork"></div>
+    <div id="staticnetwork" style='display:none;'>
+
+      <div class="screenbg">
+        <span class="screencontents"></span>
+      </div>
+
+      <div class='dexter-total-section'>
+        <table class='dexter-header'>
           <tr>
-            <th scope="col" class='static-results-col-icon'></th> <!--Icon -->
-            <th scope="col" class='static-results-col-title'>Page title (click to open page)</th>
-            <th scope="col" class='static-results-col-accessibility'>Accessibility actions<br>WCAG A | AA</th>
-            <th scope="col" class='static-results-col-axe'>axe diagnostics</th>
-            <th scope="col" class='static-results-col-ce'>Content editorial</th>
-            <th scope="col" class='static-results-col-recheck'>Page corrected, recheck</th>
+            <td class="main-td"><strong>Website:</strong></td>
+            <td class="dexter-total-main-heading"></td>
           </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
+          <tr>
+            <td class="main-td"><strong>Date:</strong></td>
+            <td class="dexter-total-main-date"></td>
+          </tr>
+        </table>
 
+        <h2 class="dexter-total-heading">Content editorial standards</h2>
+        <p class="dexter-subtitle">This is the foundation of accessibility training for your content editors.</p>
+        <span class='dexter-total-label'><strong><abbr title="Content Editor">CE</abbr> totals:</strong></span>
+        <span class='dexter-total-result ce-heading-line'></span>
+        <br><br>
+
+        <h2 class="dexter-total-heading"><abbr title='Web Content Accessibility Guidelines'>WCAG</abbr> diagnostics totals</h2>
+        <p class="dexter-subtitle"><abbr title='Web Content Accessibility Guidelines'>WCAG</abbr> 2 covers a wide range of recommendations for making Web content more accessible to people with disabilities.</p>
+
+        <span class='dexter-total-label'><strong>Level A:</strong></span>
+        <span class='dexter-total-result a-heading-line'></span>
+        <br>
+        <span class='dexter-total-label'><strong>Level AA:</strong></span>
+        <span class='dexter-total-result aa-heading-line'></span>
+        <br><br>
+
+        <h2 class="dexter-total-heading">axe diagnostics</h2>
+        <p class="dexter-subtitle">The accessibility rules engine 'axe-core' from deque labs is used by developers and accessibility experts to ensure alignment with accessibility guidelines.</p>
+        <span class='dexter-total-label'><strong>axe totals:</strong></span>
+        <span class='dexter-total-result axe-heading-line'></span>
+        <br><br>
+
+      </div>
+      <br><br>
+
+        <table class='static-results-table'>
+          <thead>
+            <tr>
+              <th scope="col" class='static-results-col-icon'></th> <!--Icon -->
+              <th scope="col" class='static-results-col-title'>Page title</th>
+              <th scope="col" class='static-results-col-accessibility'>WCAG A | AA</th>
+              <th scope="col" class='static-results-col-axe'>axe diagnostics</th>
+              <th scope="col" class='static-results-col-ce'>Content editorial</th>
+              <th scope="col" class='static-results-col-recheck'></th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+    </div>
   </div>
-</div>
+</div><!--/page-container-->
+
 <script src="/static/js/vis.js"></script>
 </body>
 </html>
